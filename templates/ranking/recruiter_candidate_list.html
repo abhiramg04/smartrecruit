@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+
+{% block title %}Candidate Ranking - SmartRecruit{% endblock %}
+
+{% block content %}
+<div class="page-header animate-fade-in d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+    <div>
+        <h2 class="fw-bold m-0" style="color: var(--cream);">Candidate Ranking Dashboard</h2>
+        <p class="mb-0" style="color: rgba(254,255,214,0.85);">AI-assisted candidate ranking across all active job postings</p>
+    </div>
+</div>
+
+<div class="row g-4 animate-children">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white py-3 border-bottom border-mint">
+                <h5 class="fw-bold text-teal m-0"><i class="bi bi-stars me-2"></i>Ranked Candidates</h5>
+            </div>
+            <div class="card-body p-0">
+                {% if results %}
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th class="ps-4">Rank</th>
+                                    <th>Candidate</th>
+                                    <th>Job Title</th>
+                                    <th>Overall Score</th>
+                                    <th>AI Verdict</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for r in results %}
+                                <tr>
+                                    <td class="ps-4 fw-bold text-teal">#{{ forloop.counter }}</td>
+                                    <td>
+                                        <div class="fw-bold text-dark">{{ r.application.candidate.user.get_full_name|default:r.application.candidate.user.username }}</div>
+                                        <div class="small text-muted">{{ r.application.candidate.user.email }}</div>
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'job_detail' r.application.job.pk %}" class="text-teal text-decoration-none fw-600">
+                                            {{ r.application.job.title }}
+                                        </a>
+                                    </td>
+                                    <td>
+                                        <span class="fw-bold fs-6 {% if r.overall_score >= 70 %}text-success{% elif r.overall_score >= 45 %}text-warning{% else %}text-danger{% endif %}">
+                                            {{ r.overall_score|floatformat:1 }}%
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge {% if r.verdict == 'SUITABLE' %}bg-success{% elif r.verdict == 'MAYBE' %}bg-warning text-dark{% else %}bg-danger{% endif %}">
+                                            {{ r.verdict }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'ranking_result' r.pk %}" class="btn btn-sm btn-outline-teal me-1">
+                                            <i class="bi bi-bar-chart-line me-1"></i> AI Breakdown
+                                        </a>
+                                        <a href="{% url 'hiring_decision' r.application.pk %}" class="btn btn-sm btn-primary-custom">
+                                            <i class="bi bi-check2-circle me-1"></i> Review Decision
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="bi bi-stars fs-1 text-mint"></i>
+                        <p class="text-muted mt-2">No ranked candidates found. Trigger AI match on candidate applications to populate this dashboard.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        {% if unranked_applications %}
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white py-3 border-bottom border-mint">
+                <h5 class="fw-bold text-teal m-0"><i class="bi bi-hourglass-split me-2"></i>Pending AI Screening (Unranked Applicants)</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0">
+                        <thead class="bg-light">
+                            <tr>
+                                <th class="ps-4">Candidate</th>
+                                <th>Job Title</th>
+                                <th>Applied Date</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for app in unranked_applications %}
+                            <tr>
+                                <td class="ps-4">
+                                    <div class="fw-bold text-dark">{{ app.candidate.user.get_full_name|default:app.candidate.user.username }}</div>
+                                    <div class="small text-muted">{{ app.candidate.user.email }}</div>
+                                </td>
+                                <td>{{ app.job.title }}</td>
+                                <td class="small text-muted">{{ app.applied_at|date:"M d, Y" }}</td>
+                                <td>
+                                    <form method="post" action="{% url 'trigger_ranking' app.pk %}" class="d-inline">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm btn-outline-primary fw-bold"><i class="bi bi-magic me-1"></i> Run AI Match</button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

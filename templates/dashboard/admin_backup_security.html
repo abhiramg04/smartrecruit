@@ -1,0 +1,150 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Backup & Security – SmartRecruit Admin{% endblock %}
+
+{% block content %}
+<style>
+    .glass-card {
+        background: rgba(128, 128, 128, 0.03);
+        border: 1px solid rgba(128, 128, 128, 0.15);
+        border-radius: 1rem;
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        padding: 2rem;
+    }
+    .form-control {
+        background-color: rgba(128, 128, 128, 0.05);
+        border: 1px solid rgba(128, 128, 128, 0.2);
+        color: var(--text-primary);
+        border-radius: 0.5rem;
+        padding: 0.75rem 1rem;
+    }
+    .form-control:focus {
+        background-color: rgba(128, 128, 128, 0.08);
+        border-color: var(--accent);
+        box-shadow: 0 0 0 0.25rem rgba(var(--accent-rgb), 0.25);
+        color: var(--text-primary);
+    }
+    .form-check-input {
+        background-color: rgba(128, 128, 128, 0.1);
+        border-color: rgba(128, 128, 128, 0.3);
+    }
+    .form-check-input:checked {
+        background-color: var(--accent);
+        border-color: var(--accent);
+    }
+    .form-label {
+        font-weight: 600;
+        color: var(--text-secondary);
+        margin-bottom: 0.5rem;
+    }
+    .help-text {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+        opacity: 0.8;
+        margin-top: 0.25rem;
+    }
+    
+    .backup-card {
+        background: linear-gradient(135deg, rgba(40,167,69,0.1), rgba(40,167,69,0.02));
+        border: 1px solid rgba(40,167,69,0.2);
+        border-radius: 1rem;
+        padding: 2rem;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        justify-content: center;
+    }
+    .backup-icon {
+        font-size: 3rem;
+        color: #28a745;
+        margin-bottom: 1rem;
+    }
+</style>
+
+<div class="animate-fade-in">
+    <div class="page-header mb-4">
+        <h1 class="mb-1 fw-bold" style="font-size:1.75rem; letter-spacing: -0.5px;">
+            <i class="bi bi-shield-check text-accent me-2"></i> Backup & Security
+        </h1>
+        <p class="mb-0 text-secondary" style="font-size:0.95rem;">
+            Manage platform security policies and database backups.
+        </p>
+    </div>
+
+    <div class="row g-4">
+        <!-- Security Policies -->
+        <div class="col-lg-8">
+            <div class="glass-card">
+                <h4 class="fw-bold mb-4">Security Policies</h4>
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="mb-4">
+                        <div class="form-check form-switch">
+                            {{ form.enforce_strong_passwords }}
+                            <label class="form-check-label fw-bold" for="{{ form.enforce_strong_passwords.id_for_label }}">Enforce Strong Passwords</label>
+                        </div>
+                        <div class="help-text ms-5">{{ form.enforce_strong_passwords.help_text }}</div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <div class="form-check form-switch">
+                            {{ form.two_factor_auth_required }}
+                            <label class="form-check-label fw-bold" for="{{ form.two_factor_auth_required.id_for_label }}">Require Two-Factor Authentication (2FA)</label>
+                        </div>
+                        <div class="help-text ms-5">{{ form.two_factor_auth_required.help_text }}</div>
+                    </div>
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <label for="{{ form.session_timeout_minutes.id_for_label }}" class="form-label">Session Timeout (Minutes)</label>
+                            {{ form.session_timeout_minutes }}
+                            <div class="help-text">{{ form.session_timeout_minutes.help_text }}</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="{{ form.max_login_attempts.id_for_label }}" class="form-label">Max Login Attempts</label>
+                            {{ form.max_login_attempts }}
+                            <div class="help-text">{{ form.max_login_attempts.help_text }}</div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end mt-4 pt-3 border-top border-secondary border-opacity-10">
+                        <button type="submit" class="btn btn-primary px-4 py-2 fw-semibold" style="border-radius: 0.5rem;">
+                            <i class="bi bi-save me-2"></i> Save Policies
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Database Backup -->
+        <div class="col-lg-4">
+            <div class="backup-card">
+                <i class="bi bi-database-down backup-icon"></i>
+                <h4 class="fw-bold mb-2">Database Backup</h4>
+                <p class="text-secondary small mb-4">
+                    Download a complete JSON dump of the current database state. This includes all users, jobs, applications, and configurations.
+                </p>
+                
+                <form action="{% url 'export_database' %}" method="post" class="w-100">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-success w-100 py-3 fw-bold shadow-sm" style="border-radius: 0.5rem;">
+                        <i class="bi bi-cloud-download me-2"></i> Download Backup
+                    </button>
+                </form>
+                
+                <div class="mt-4 pt-3 w-100 border-top border-success border-opacity-25">
+                    <div class="d-flex justify-content-between align-items-center text-secondary small">
+                        <span>Format: JSON</span>
+                        <span>Size: Dynamic</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

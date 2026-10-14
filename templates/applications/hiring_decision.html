@@ -1,0 +1,316 @@
+{% extends 'base.html' %}
+
+{% block title %}Hiring Decision - {{ application.candidate.user.get_full_name }}{% endblock %}
+
+{% block content %}
+<style>
+    .hiring-card {
+        background: #ffffff;
+        border: 1px solid rgba(91, 174, 160, 0.3);
+        border-radius: 14px;
+        box-shadow: 0 4px 18px rgba(45, 139, 123, 0.08);
+    }
+    .hiring-card .card-header {
+        background: #ffffff;
+        border-bottom: 2px solid rgba(91, 174, 160, 0.25);
+    }
+    .hiring-card h4, .hiring-card h5, .hiring-card h6 {
+        color: #1A4A42 !important;
+    }
+    .hiring-card .section-title {
+        color: #1A4A42 !important;
+        font-weight: 700;
+    }
+    .hiring-card .text-muted-custom {
+        color: #3D7A70 !important;
+        font-size: 0.88rem;
+    }
+    .hiring-card .score-box {
+        background: rgba(45, 139, 123, 0.05);
+        border: 1px solid rgba(91, 174, 160, 0.3) !important;
+        border-radius: 10px;
+        padding: 0.75rem;
+    }
+    .hiring-card .score-val {
+        color: #2D8B7B !important;
+        font-weight: 800;
+        font-size: 1.25rem;
+    }
+    /* Decision Radio Cards */
+    .decision-label {
+        border: 2px solid rgba(91, 174, 160, 0.3);
+        border-radius: 12px;
+        transition: all 0.2s ease;
+        cursor: pointer;
+        background: #ffffff;
+    }
+    .decision-label .desc-text {
+        color: #4D7C75;
+    }
+    .btn-check:checked + .decision-select {
+        background-color: #f0fdf4 !important;
+        border-color: #22c55e !important;
+        color: #15803d !important;
+    }
+    .btn-check:checked + .decision-select .desc-text {
+        color: #166534 !important;
+    }
+    .btn-check:checked + .decision-hold {
+        background-color: #fefce8 !important;
+        border-color: #eab308 !important;
+        color: #854d0e !important;
+    }
+    .btn-check:checked + .decision-hold .desc-text {
+        color: #713f12 !important;
+    }
+    .btn-check:checked + .decision-reject {
+        background-color: #fef2f2 !important;
+        border-color: #ef4444 !important;
+        color: #b91c1c !important;
+    }
+    .btn-check:checked + .decision-reject .desc-text {
+        color: #991b1b !important;
+    }
+</style>
+
+<div class="page-header animate-fade-in d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+    <div>
+        <h2 class="fw-800 m-0" style="color: var(--cream);">Hiring Decision Review</h2>
+        <p class="mb-0 fw-500" style="color: rgba(254,255,214,0.85);">Review candidate evidence and finalize hiring decision for {{ application.job.title }}</p>
+    </div>
+    <a href="{% url 'manage_applications' %}" class="btn btn-outline-light btn-sm fw-600 px-3 py-2">
+        <i class="bi bi-arrow-left me-1"></i> Back to Applications
+    </a>
+</div>
+
+<div class="row g-4 animate-children">
+
+    <!-- Left Column: Consolidated Candidate Evidence -->
+    <div class="col-lg-8">
+        
+        <!-- Candidate Profile & Application Overview -->
+        <div class="card hiring-card mb-4">
+            <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                <h5 class="fw-bold section-title m-0"><i class="bi bi-person-badge me-2 text-teal"></i>Candidate Profile</h5>
+                {% if application.candidate.resume_file %}
+                    <a href="{{ application.candidate.resume_file.url }}" target="_blank" class="btn btn-sm btn-outline-teal fw-600">
+                        <i class="bi bi-file-earmark-pdf me-1"></i> View Resume PDF
+                    </a>
+                {% endif %}
+            </div>
+            <div class="card-body p-4">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <h4 class="fw-800 text-dark mb-1">{{ application.candidate.user.get_full_name|default:application.candidate.user.username }}</h4>
+                        <p class="text-muted-custom mb-2"><i class="bi bi-envelope me-1 text-teal"></i>{{ application.candidate.user.email }} | <i class="bi bi-telephone me-1 text-teal"></i>{{ application.candidate.user.phone|default:"N/A" }}</p>
+                        <p class="text-muted-custom mb-0"><i class="bi bi-geo-alt me-1 text-teal"></i>{{ application.candidate.location|default:"Location not specified" }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="p-3 rounded" style="background: rgba(45,139,123,0.06); border: 1px solid rgba(91,174,160,0.2);">
+                            <span class="text-muted-custom small d-block">Applied Position</span>
+                            <span class="fw-800 fs-6" style="color:#2D8B7B;">{{ application.job.title }}</span>
+                            <span class="text-muted-custom small d-block mt-1">Experience: {{ application.candidate.experience_years|default:"0" }} years</span>
+                        </div>
+                    </div>
+                </div>
+
+                {% if application.cover_letter %}
+                    <hr class="my-3" style="border-color: rgba(91,174,160,0.3);">
+                    <h6 class="fw-bold text-dark mb-2">Cover Letter / Note</h6>
+                    <p class="text-muted-custom p-3 rounded mb-0" style="background: rgba(45,139,123,0.04); border: 1px solid rgba(91,174,160,0.2);">{{ application.cover_letter }}</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- AI Screening & Candidate Ranking -->
+        <div class="card hiring-card mb-4">
+            <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                <h5 class="fw-bold section-title m-0"><i class="bi bi-robot me-2 text-teal"></i>AI Screening & Ranking Results</h5>
+                {% if ranking_result %}
+                    <span class="badge {% if ranking_result.overall_score >= 70 %}bg-success{% elif ranking_result.overall_score >= 45 %}bg-warning text-dark{% else %}bg-danger{% endif %} fs-6 px-3 py-2 fw-700">
+                        Match Score: {{ ranking_result.overall_score|floatformat:1 }}% ({{ ranking_result.verdict }})
+                    </span>
+                {% endif %}
+            </div>
+            <div class="card-body p-4">
+                {% if ranking_result %}
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-3 text-center">
+                            <div class="score-box">
+                                <span class="text-muted-custom small d-block fw-600">Skill Score</span>
+                                <span class="score-val">{{ ranking_result.skill_score|floatformat:0 }}%</span>
+                            </div>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <div class="score-box">
+                                <span class="text-muted-custom small d-block fw-600">Experience</span>
+                                <span class="score-val">{{ ranking_result.experience_score|floatformat:0 }}%</span>
+                            </div>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <div class="score-box">
+                                <span class="text-muted-custom small d-block fw-600">Education</span>
+                                <span class="score-val">{{ ranking_result.education_score|floatformat:0 }}%</span>
+                            </div>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <div class="score-box">
+                                <span class="text-muted-custom small d-block fw-600">Projects</span>
+                                <span class="score-val">{{ ranking_result.project_score|floatformat:0 }}%</span>
+                            </div>
+                        </div>
+                    </div>
+                    {% if ranking_result.ai_recommendation %}
+                        <div class="p-3 rounded mb-0" style="background: rgba(2,132,199,0.08); border: 1px solid rgba(2,132,199,0.25); color: #0369a1;">
+                            <strong class="fw-700">AI Recommendation Summary:</strong> {{ ranking_result.ai_recommendation }}
+                        </div>
+                    {% endif %}
+                {% else %}
+                    <div class="text-center py-3">
+                        <p class="text-muted-custom mb-2">No AI Ranking performed yet for this applicant.</p>
+                        <form method="post" action="{% url 'trigger_ranking' application.pk %}" class="d-inline">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-outline-primary fw-bold"><i class="bi bi-magic me-1"></i> Trigger AI Screening</button>
+                        </form>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Technical Assessment Performance -->
+        <div class="card hiring-card mb-4">
+            <div class="card-header py-3">
+                <h5 class="fw-bold section-title m-0"><i class="bi bi-clipboard-check me-2 text-teal"></i>Technical Assessment Results</h5>
+            </div>
+            <div class="card-body p-4">
+                {% if assessment_results %}
+                    <div class="table-responsive">
+                        <table class="table align-middle">
+                            <thead>
+                                <tr style="color: #1A4A42;">
+                                    <th>Assessment Title</th>
+                                    <th>Score</th>
+                                    <th>Result</th>
+                                    <th>Submitted Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for res in assessment_results %}
+                                <tr>
+                                    <td class="fw-bold text-dark">{{ res.assessment.title }}</td>
+                                    <td class="fw-600 text-dark">{{ res.score }} / {{ res.total_score }} ({{ res.final_score }}%)</td>
+                                    <td>
+                                        <span class="badge {% if res.is_passed %}bg-success{% else %}bg-danger{% endif %} fw-700">
+                                            {% if res.is_passed %}PASSED{% else %}FAILED{% endif %}
+                                        </span>
+                                    </td>
+                                    <td class="small text-muted-custom">{{ res.time_submitted|date:"M d, Y" }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <span class="text-muted-custom">No assessment results recorded for this candidate.</span>
+                        <a href="{% url 'assessments:assign' application.pk %}" class="btn btn-sm btn-outline-teal fw-600"><i class="bi bi-plus-circle me-1"></i> Assign Assessment</a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Interview Evaluations -->
+        <div class="card hiring-card mb-4">
+            <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                <h5 class="fw-bold section-title m-0"><i class="bi bi-calendar-event me-2 text-teal"></i>Interview Schedule & Evaluation</h5>
+                <a href="{% url 'schedule_interview' application.pk %}" class="btn btn-sm btn-outline-teal fw-600"><i class="bi bi-calendar-plus me-1"></i> Schedule Interview</a>
+            </div>
+            <div class="card-body p-4">
+                {% if interview_schedules %}
+                    {% for inter in interview_schedules %}
+                    <div class="border rounded p-3 mb-3" style="background: rgba(45,139,123,0.04); border-color: rgba(91,174,160,0.3) !important;">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="fw-bold text-dark">{{ inter.get_interview_type_display }}</span>
+                            <span class="badge bg-secondary fw-600">{{ inter.get_status_display }}</span>
+                        </div>
+                        <p class="text-muted-custom small mb-1"><i class="bi bi-clock me-1 text-teal"></i>{{ inter.scheduled_time|date:"F d, Y @ h:i A" }} ({{ inter.duration_minutes }}m)</p>
+                        {% if inter.notes %}<p class="small text-muted-custom mb-0">Notes: {{ inter.notes }}</p>{% endif %}
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted-custom mb-0">No interview scheduled yet.</p>
+                {% endif %}
+
+                {% if interview_summary %}
+                    <hr class="my-3" style="border-color: rgba(91,174,160,0.3);">
+                    <h6 class="fw-bold section-title mb-2">AI Interview Transcript Analysis</h6>
+                    <div class="row g-2 mb-2">
+                        <div class="col-md-4"><span class="small text-muted-custom">Technical:</span> <strong class="text-dark">{{ interview_summary.technical_score }}/10</strong></div>
+                        <div class="col-md-4"><span class="small text-muted-custom">Communication:</span> <strong class="text-dark">{{ interview_summary.communication_score }}/10</strong></div>
+                        <div class="col-md-4"><span class="small text-muted-custom">Confidence:</span> <strong class="text-dark">{{ interview_summary.confidence_score }}/10</strong></div>
+                    </div>
+                    <p class="small text-muted-custom mb-0"><strong class="text-dark">Recommendation:</strong> {{ interview_summary.hiring_recommendation }}</p>
+                {% endif %}
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Right Column: Recruiter Final Hiring Decision Form -->
+    <div class="col-lg-4">
+        <div class="card hiring-card sticky-top" style="top: 20px;">
+            <div class="card-header text-white py-3" style="background: linear-gradient(135deg, #2D8B7B, #5BAEA0); border-radius: 13px 13px 0 0;">
+                <h5 class="fw-bold m-0 text-white"><i class="bi bi-check2-square me-2"></i>Final Hiring Decision</h5>
+            </div>
+            <div class="card-body p-4">
+                <div class="p-3 rounded mb-4" style="background: #fefce8; border: 1px solid #fde68a; color: #713f12; font-size: 0.85rem;">
+                    <i class="bi bi-exclamation-triangle-fill me-1 text-warning"></i> <strong>Important:</strong> AI recommendations assist decision making. The final decision is strictly made by you (the recruiter).
+                </div>
+
+                <form method="post">
+                    {% csrf_token %}
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold text-dark">Select Final Decision</label>
+                        <div class="d-grid gap-2">
+                            <input type="radio" class="btn-check" name="decision" id="dec_select" value="SELECT" {% if application.hiring_decision == 'SELECT' %}checked{% endif %} required>
+                            <label class="decision-label decision-select text-start py-3 px-3 fw-bold" for="dec_select">
+                                <i class="bi bi-check-circle-fill me-2 fs-5 text-success"></i> SELECT / OFFER
+                                <span class="d-block small fw-normal desc-text mt-1">Candidate passes all rounds. Extend offer.</span>
+                            </label>
+
+                            <input type="radio" class="btn-check" name="decision" id="dec_hold" value="HOLD" {% if application.hiring_decision == 'HOLD' %}checked{% endif %}>
+                            <label class="decision-label decision-hold text-start py-3 px-3 fw-bold" for="dec_hold">
+                                <i class="bi bi-pause-circle-fill me-2 fs-5 text-warning"></i> HOLD
+                                <span class="d-block small fw-normal desc-text mt-1">Keep on hold for future review or comparison.</span>
+                            </label>
+
+                            <input type="radio" class="btn-check" name="decision" id="dec_reject" value="REJECT" {% if application.hiring_decision == 'REJECT' %}checked{% endif %}>
+                            <label class="decision-label decision-reject text-start py-3 px-3 fw-bold" for="dec_reject">
+                                <i class="bi bi-x-circle-fill me-2 fs-5 text-danger"></i> REJECT
+                                <span class="d-block small fw-normal desc-text mt-1">Candidate does not meet requirements. Send rejection.</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="id_notes" class="form-label fw-bold text-dark">Decision Justification / Notes</label>
+                        <textarea name="notes" id="id_notes" rows="4" class="form-control bg-white text-dark border-secondary" style="border: 1.5px solid rgba(91,174,160,0.4);" placeholder="Provide notes or feedback regarding your final decision...">{{ application.hiring_decision_notes|default:'' }}</textarea>
+                    </div>
+
+                    {% if application.hiring_decision_at %}
+                    <div class="small text-muted-custom mb-3">
+                        Last decision recorded on {{ application.hiring_decision_at|date:"F d, Y @ h:i A" }}
+                    </div>
+                    {% endif %}
+
+                    <button type="submit" class="btn btn-primary-custom w-100 py-2.5 fw-bold shadow-teal">
+                        <i class="bi bi-send-check me-1"></i> Submit Hiring Decision
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,189 @@
+{% extends 'base.html' %}
+
+{% block title %}Interview Intelligence: {{ summary.application.candidate.user.get_full_name }} – SmartRecruit{% endblock %}
+
+{% block content %}
+<div class="page-header animate-fade-in mb-4">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <span class="badge bg-white text-dark mb-2 border">AI Intelligence Report</span>
+            <h2 class="fw-bold m-0" style="color:var(--cream);">
+                {{ summary.application.candidate.user.get_full_name }}
+            </h2>
+            <p class="mb-0" style="color:rgba(254,255,214,0.85);">
+                {{ summary.application.job.title }}
+            </p>
+        </div>
+        <div>
+            <a href="{% url 'export_summary_pdf' summary.pk %}" class="btn btn-light fw-bold shadow-sm">
+                <i class="bi bi-file-earmark-pdf me-2 text-danger"></i>Export PDF
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 animate-slide-up">
+    {# ── Left Column: Metrics & Evaluation ─────────────────────────────── #}
+    <div class="col-lg-4">
+        
+        {# Final Recommendation Card #}
+        <div class="card border-0 shadow-sm rounded-4 mb-4 text-center overflow-hidden">
+            {% if 'Strong Hire' in summary.hiring_recommendation %}
+                <div class="bg-success text-white py-3 fw-bold fs-5"><i class="bi bi-star-fill me-2"></i>STRONG HIRE</div>
+            {% elif 'Hire' in summary.hiring_recommendation %}
+                <div class="bg-primary text-white py-3 fw-bold fs-5"><i class="bi bi-check-circle-fill me-2"></i>HIRE</div>
+            {% elif 'No Hire' in summary.hiring_recommendation or 'Reject' in summary.hiring_recommendation %}
+                <div class="bg-danger text-white py-3 fw-bold fs-5"><i class="bi bi-x-circle-fill me-2"></i>NO HIRE</div>
+            {% else %}
+                <div class="bg-warning text-dark py-3 fw-bold fs-5"><i class="bi bi-pause-circle-fill me-2"></i>HOLD</div>
+            {% endif %}
+            
+            <div class="card-body p-4">
+                <p class="small text-muted mb-3 text-uppercase fw-bold">Overall Evaluation</p>
+                <p class="mb-0 text-dark fw-500">{{ summary.overall_evaluation|default:summary.summary }}</p>
+            </div>
+            <div class="card-footer bg-light border-0 py-2">
+                <small class="text-muted"><i class="bi bi-info-circle me-1"></i>Decision Support Only</small>
+            </div>
+        </div>
+
+        {# AI Score Radar #}
+        <div class="card border-0 shadow-sm rounded-4 mb-4">
+            <div class="card-body p-4">
+                <h6 class="fw-bold text-dark mb-4 text-uppercase small">Performance Metrics</h6>
+                
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between small fw-bold mb-1">
+                        <span><i class="bi bi-code-square me-2 text-teal"></i>Technical</span>
+                        <span>{{ summary.technical_score }}%</span>
+                    </div>
+                    <div class="progress" style="height: 8px;">
+                        <div class="progress-bar bg-teal" style="width: {{ summary.technical_score }}%"></div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between small fw-bold mb-1">
+                        <span><i class="bi bi-chat-dots me-2 text-primary"></i>Communication</span>
+                        <span>{{ summary.communication_score }}%</span>
+                    </div>
+                    <div class="progress" style="height: 8px;">
+                        <div class="progress-bar bg-primary" style="width: {{ summary.communication_score }}%"></div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between small fw-bold mb-1">
+                        <span><i class="bi bi-puzzle me-2 text-warning"></i>Problem Solving</span>
+                        <span>{{ summary.problem_solving_score }}%</span>
+                    </div>
+                    <div class="progress" style="height: 8px;">
+                        <div class="progress-bar bg-warning" style="width: {{ summary.problem_solving_score }}%"></div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between small fw-bold mb-1">
+                        <span><i class="bi bi-person-check me-2 text-success"></i>Confidence</span>
+                        <span>{{ summary.confidence_score }}%</span>
+                    </div>
+                    <div class="progress" style="height: 8px;">
+                        <div class="progress-bar bg-success" style="width: {{ summary.confidence_score }}%"></div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    {# ── Right Column: Details & Transcript ────────────────────────────── #}
+    <div class="col-lg-8">
+        <div class="row g-4 mb-4">
+            <div class="col-md-6">
+                <div class="card border-0 shadow-sm rounded-4 h-100" style="border-top: 4px solid var(--mint) !important;">
+                    <div class="card-body p-4">
+                        <h6 class="fw-bold text-dark mb-3"><i class="bi bi-graph-up-arrow me-2 text-mint"></i>Key Strengths</h6>
+                        <ul class="list-unstyled mb-0">
+                            {% for strength in summary.strengths %}
+                            <li class="mb-2 text-dark small"><i class="bi bi-check-lg text-mint me-2"></i>{{ strength }}</li>
+                            {% empty %}
+                            <li class="text-muted small fst-italic">No specific strengths identified.</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card border-0 shadow-sm rounded-4 h-100" style="border-top: 4px solid var(--bs-warning) !important;">
+                    <div class="card-body p-4">
+                        <h6 class="fw-bold text-dark mb-3"><i class="bi bi-exclamation-triangle me-2 text-warning"></i>Areas of Concern</h6>
+                        <ul class="list-unstyled mb-0">
+                            {% for concern in summary.areas_of_concern %}
+                            <li class="mb-2 text-dark small"><i class="bi bi-exclamation-circle text-warning me-2"></i>{{ concern }}</li>
+                            {% empty %}
+                            {% for weakness in summary.weaknesses %}
+                            <li class="mb-2 text-dark small"><i class="bi bi-exclamation-circle text-warning me-2"></i>{{ weakness }}</li>
+                            {% empty %}
+                            <li class="text-muted small fst-italic">No specific concerns identified.</li>
+                            {% endfor %}
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% if summary.relevant_answers %}
+        <div class="card border-0 shadow-sm rounded-4 mb-4">
+            <div class="card-body p-4">
+                <h6 class="fw-bold text-dark mb-3"><i class="bi bi-chat-quote me-2 text-primary"></i>Notable Answers</h6>
+                <div class="d-flex flex-column gap-2">
+                    {% for ans in summary.relevant_answers %}
+                    <div class="p-3 bg-light rounded-3 small text-dark border-start border-primary border-4">
+                        "{{ ans }}"
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if summary.next_round_suggestion %}
+        <div class="card border-0 shadow-sm rounded-4 mb-4 bg-primary text-white">
+            <div class="card-body p-4">
+                <h6 class="fw-bold mb-2"><i class="bi bi-arrow-right-circle me-2"></i>Next Round Focus</h6>
+                <p class="mb-0 small opacity-75">{{ summary.next_round_suggestion }}</p>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="card border-0 shadow-sm rounded-4">
+            <div class="card-header bg-white border-bottom p-4 d-flex justify-content-between align-items-center">
+                <h6 class="fw-bold text-dark m-0"><i class="bi bi-file-earmark-text me-2"></i>Interview Transcript</h6>
+                <span class="badge bg-light text-muted border">Source: {{ summary.get_transcript_source_display }}</span>
+            </div>
+            <div class="card-body p-0">
+                {% if summary.audio_file %}
+                <div class="p-3 bg-light border-bottom d-flex align-items-center gap-3">
+                    <i class="bi bi-play-circle-fill fs-4 text-teal"></i>
+                    <audio controls class="w-100" style="height:40px;">
+                        <source src="{{ summary.audio_file.url }}" type="audio/mpeg">
+                        Your browser does not support the audio element.
+                    </audio>
+                </div>
+                {% endif %}
+                <div class="p-4" style="max-height: 400px; overflow-y: auto; background:#fdfdfd;">
+                    <p class="small text-dark lh-lg mb-0 font-monospace" style="white-space: pre-wrap;">{{ summary.transcript }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .bg-teal { background-color: var(--teal) !important; }
+    .text-teal { color: var(--teal) !important; }
+    .bg-mint { background-color: var(--mint) !important; }
+    .text-mint { color: var(--mint) !important; }
+</style>
+{% endblock %}

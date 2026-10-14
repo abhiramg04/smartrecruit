@@ -1,0 +1,386 @@
+{% extends 'base.html' %}
+
+{% block title %}Company Approvals – SmartRecruit Admin{% endblock %}
+
+{% block content %}
+<div class="animate-fade-in">
+
+    <!-- Page Header -->
+    <div class="page-header mb-4">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+            <div>
+                <h1 class="mb-1" style="font-size:1.5rem;">
+                    ✅ Company Approvals
+                </h1>
+                <p class="mb-0" style="color:var(--text-secondary);font-size:0.88rem;">
+                    Review, approve or reject company registrations
+                </p>
+            </div>
+            <a href="{% url 'admin_dashboard' %}" class="btn btn-outline-secondary btn-sm d-flex align-items-center gap-1">
+                <i class="bi bi-arrow-left"></i> Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- Summary badges -->
+    <div class="d-flex gap-3 flex-wrap mb-4">
+        <span class="badge rounded-pill px-3 py-2" style="background:rgba(230,126,34,0.15);color:#c0670a;font-size:0.83rem;border:1px solid rgba(230,126,34,0.3);">
+            <i class="bi bi-hourglass-split me-1"></i>
+            {{ pending_companies|length }} Pending
+        </span>
+        {% if pending_companies %}
+        <span class="badge rounded-pill px-3 py-2" style="background:rgba(231,76,60,0.1);color:#c0392b;font-size:0.83rem;border:1px solid rgba(231,76,60,0.2);">
+            Action required
+        </span>
+        {% else %}
+        <span class="badge rounded-pill px-3 py-2" style="background:rgba(39,174,96,0.12);color:#1e8449;font-size:0.83rem;border:1px solid rgba(39,174,96,0.25);">
+            <i class="bi bi-check-circle me-1"></i> All clear
+        </span>
+        {% endif %}
+    </div>
+
+    <!-- ═══════════════════════════════════════════
+         PENDING COMPANIES TABLE
+    ═══════════════════════════════════════════ -->
+    {% if pending_companies %}
+    <div class="glass-panel p-0 mb-5" style="overflow:hidden;">
+        <div class="px-4 py-3 d-flex align-items-center gap-2" style="border-bottom:1px solid var(--border);">
+            <span style="font-size:1.1rem;">🏢</span>
+            <h5 class="fw-700 mb-0">Pending Company Registrations</h5>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0" style="background:transparent;">
+                <thead style="background:rgba(45,139,123,0.06);">
+                    <tr style="font-size:0.8rem;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.04em;">
+                        <th class="px-4 py-3">Company</th>
+                        <th class="py-3">Industry</th>
+                        <th class="py-3">Owner</th>
+                        <th class="py-3">Location</th>
+                        <th class="py-3">Registered</th>
+                        <th class="py-3 text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for company in pending_companies %}
+                    <tr style="border-bottom:1px solid var(--border);font-size:0.88rem;">
+                        <!-- Company Name + Logo -->
+                        <td class="px-4 py-3">
+                            <div class="d-flex align-items-center gap-3">
+                                {% if company.logo %}
+                                    <img src="{{ company.logo.url }}"
+                                         class="rounded-circle flex-shrink-0"
+                                         style="width:40px;height:40px;object-fit:cover;border:2px solid var(--mint);"
+                                         alt="{{ company.name }}">
+                                {% else %}
+                                    <div class="rounded-circle flex-shrink-0 d-flex align-items-center justify-content-center fw-700"
+                                         style="width:40px;height:40px;background:linear-gradient(135deg,var(--teal),var(--deep-teal));color:#fff;font-size:1rem;">
+                                        {{ company.name|make_list|first|upper }}
+                                    </div>
+                                {% endif %}
+                                <div>
+                                    <div class="fw-600">{{ company.name }}</div>
+                                    {% if company.website %}
+                                    <a href="{{ company.website }}" target="_blank" rel="noopener"
+                                       class="small" style="color:var(--text-muted);font-size:0.75rem;">
+                                        <i class="bi bi-box-arrow-up-right me-1"></i>{{ company.website|truncatechars:30 }}
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </td>
+
+                        <!-- Industry -->
+                        <td class="py-3">
+                            <span class="badge rounded-pill px-2 py-1"
+                                  style="background:rgba(91,174,160,0.12);color:var(--deep-teal);font-size:0.75rem;border:1px solid var(--border);">
+                                {{ company.industry|default:"—" }}
+                            </span>
+                        </td>
+
+                        <!-- Owner -->
+                        <td class="py-3">
+                            <div class="fw-500">{{ company.owner.get_full_name|default:company.owner.username }}</div>
+                            <div class="small" style="color:var(--text-muted);font-size:0.75rem;">{{ company.owner.email }}</div>
+                        </td>
+
+                        <!-- Location -->
+                        <td class="py-3" style="color:var(--text-secondary);">
+                            <i class="bi bi-geo-alt me-1"></i>{{ company.location|default:"—" }}
+                        </td>
+
+                        <!-- Date -->
+                        <td class="py-3" style="color:var(--text-muted);font-size:0.8rem;white-space:nowrap;">
+                            {{ company.created_at|date:"M d, Y" }}
+                        </td>
+
+                        <!-- Action Buttons -->
+                        <td class="py-3">
+                            <div class="d-flex align-items-center justify-content-center gap-2 flex-wrap">
+
+                                <!-- Review -->
+                                <a href="{% url 'company_detail' company.id %}"
+                                   class="btn btn-sm d-flex align-items-center gap-1"
+                                   style="background:rgba(91,174,160,0.1);color:var(--deep-teal);border:1px solid var(--border);font-size:0.78rem;"
+                                   title="Review company profile">
+                                    <i class="bi bi-eye"></i> Review
+                                </a>
+
+                                <!-- Approve -->
+                                <form method="post" action="{% url 'company_approve' company.id %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit"
+                                            class="btn btn-sm d-flex align-items-center gap-1"
+                                            style="background:rgba(39,174,96,0.12);color:#1e8449;border:1px solid rgba(39,174,96,0.3);font-size:0.78rem;"
+                                            title="Approve this company"
+                                            onclick="return confirm('Approve {{ company.name }}? They will be notified.')">
+                                        <i class="bi bi-check-circle"></i> Approve
+                                    </button>
+                                </form>
+
+                                <!-- Reject → opens modal -->
+                                <button type="button"
+                                        class="btn btn-sm d-flex align-items-center gap-1"
+                                        style="background:rgba(231,76,60,0.1);color:#c0392b;border:1px solid rgba(231,76,60,0.25);font-size:0.78rem;"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#rejectModal{{ company.id }}"
+                                        title="Reject this company">
+                                    <i class="bi bi-x-circle"></i> Reject
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <!-- ── Reject Reason Modal ── -->
+                    <div class="modal fade" id="rejectModal{{ company.id }}" tabindex="-1"
+                         aria-labelledby="rejectModalLabel{{ company.id }}" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content glass-panel border-0" style="border-radius:var(--radius-md);">
+                                <div class="modal-header border-0 pb-0">
+                                    <h5 class="modal-title fw-700" id="rejectModalLabel{{ company.id }}">
+                                        <span style="color:#c0392b;">❌</span> Reject "{{ company.name }}"
+                                    </h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <form method="post" action="{% url 'company_reject' company.id %}">
+                                    {% csrf_token %}
+                                    <div class="modal-body pt-2">
+                                        <p class="text-muted small mb-3">
+                                            The company owner will receive a notification with your reason.
+                                            The registration will be permanently deleted.
+                                        </p>
+                                        <label for="reason{{ company.id }}" class="form-label fw-600 small">
+                                            Rejection Reason <span class="text-muted fw-400">(optional)</span>
+                                        </label>
+                                        <textarea id="reason{{ company.id }}" name="reason" rows="3"
+                                                  class="form-control"
+                                                  style="border:1px solid var(--border);border-radius:var(--radius-sm);font-size:0.88rem;background:rgba(255,255,255,0.6);"
+                                                  placeholder="e.g. Incomplete information, duplicate registration, suspicious activity…"></textarea>
+                                    </div>
+                                    <div class="modal-footer border-0 pt-0">
+                                        <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">
+                                            Cancel
+                                        </button>
+                                        <button type="submit"
+                                                class="btn btn-sm"
+                                                style="background:#c0392b;color:#fff;border:none;">
+                                            <i class="bi bi-trash3 me-1"></i> Confirm Rejection
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- ── end modal ── -->
+
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    {% else %}
+    <!-- Empty state -->
+    <div class="glass-panel p-5 text-center mb-5">
+        <div style="font-size:3.5rem;margin-bottom:1rem;">🎉</div>
+        <h4 class="fw-700 mb-2">All caught up!</h4>
+        <p class="text-muted mb-0">No companies are pending approval right now.</p>
+    </div>
+    {% endif %}
+
+
+    <!-- ═══════════════════════════════════════════
+         PENDING JOBS SECTION
+    ═══════════════════════════════════════════ -->
+    <div class="d-flex align-items-center gap-2 mb-3">
+        <span style="font-size:1.1rem;">📋</span>
+        <h5 class="fw-700 mb-0">Pending Job Approvals</h5>
+        {% if pending_jobs %}
+        <span class="badge rounded-pill px-2" style="background:rgba(142,68,173,0.15);color:#7d3c98;font-size:0.75rem;">{{ pending_jobs|length }}</span>
+        {% endif %}
+    </div>
+
+    {% if pending_jobs %}
+    <div class="glass-panel p-0" style="overflow:hidden;">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0" style="background:transparent;">
+                <thead style="background:rgba(45,139,123,0.06);">
+                    <tr style="font-size:0.8rem;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.04em;">
+                        <th class="px-4 py-3">Job Title</th>
+                        <th class="py-3">Company</th>
+                        <th class="py-3">Category</th>
+                        <th class="py-3">Type</th>
+                        <th class="py-3">Posted</th>
+                        <th class="py-3 text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for job in pending_jobs %}
+                    <tr style="border-bottom:1px solid var(--border);font-size:0.88rem;">
+                        <!-- Job Title -->
+                        <td class="px-4 py-3">
+                            <div class="fw-600">{{ job.title }}</div>
+                            {% if job.location %}
+                            <div class="small" style="color:var(--text-muted);font-size:0.75rem;">
+                                <i class="bi bi-geo-alt me-1"></i>{{ job.location }}
+                            </div>
+                            {% endif %}
+                        </td>
+
+                        <!-- Company -->
+                        <td class="py-3">
+                            <div class="d-flex align-items-center gap-2">
+                                {% if job.company.logo %}
+                                    <img src="{{ job.company.logo.url }}" class="rounded-circle"
+                                         style="width:28px;height:28px;object-fit:cover;" alt="">
+                                {% else %}
+                                    <div class="rounded-circle d-flex align-items-center justify-content-center fw-700"
+                                         style="width:28px;height:28px;background:linear-gradient(135deg,var(--teal),var(--deep-teal));color:#fff;font-size:0.75rem;flex-shrink:0;">
+                                        {{ job.company.name|make_list|first|upper }}
+                                    </div>
+                                {% endif %}
+                                <span>{{ job.company.name }}</span>
+                            </div>
+                        </td>
+
+                        <!-- Category -->
+                        <td class="py-3">
+                            <span class="badge rounded-pill px-2"
+                                  style="background:rgba(91,174,160,0.12);color:var(--deep-teal);border:1px solid var(--border);font-size:0.75rem;">
+                                {{ job.category.name|default:"—" }}
+                            </span>
+                        </td>
+
+                        <!-- Type -->
+                        <td class="py-3" style="font-size:0.78rem;color:var(--text-secondary);">
+                            {{ job.get_employment_type_display }}<br>
+                            <span style="font-size:0.72rem;color:var(--text-muted);">{{ job.get_work_model_display }}</span>
+                        </td>
+
+                        <!-- Posted -->
+                        <td class="py-3" style="color:var(--text-muted);font-size:0.8rem;white-space:nowrap;">
+                            {{ job.created_at|date:"M d, Y" }}
+                        </td>
+
+                        <!-- Actions -->
+                        <td class="py-3">
+                            <div class="d-flex align-items-center justify-content-center gap-2 flex-wrap">
+
+                                <!-- Review -->
+                                <a href="{% url 'job_detail' job.id %}"
+                                   class="btn btn-sm d-flex align-items-center gap-1"
+                                   style="background:rgba(91,174,160,0.1);color:var(--deep-teal);border:1px solid var(--border);font-size:0.78rem;"
+                                   title="Review job details">
+                                    <i class="bi bi-eye"></i> Review
+                                </a>
+
+                                <!-- Approve -->
+                                <form method="post" action="{% url 'job_approve' job.id %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit"
+                                            class="btn btn-sm d-flex align-items-center gap-1"
+                                            style="background:rgba(39,174,96,0.12);color:#1e8449;border:1px solid rgba(39,174,96,0.3);font-size:0.78rem;"
+                                            title="Approve this job"
+                                            onclick="return confirm('Approve {{ job.title }}? The company will be notified.')">
+                                        <i class="bi bi-check-circle"></i> Approve
+                                    </button>
+                                </form>
+
+                                <!-- Reject → opens modal -->
+                                <button type="button"
+                                        class="btn btn-sm d-flex align-items-center gap-1"
+                                        style="background:rgba(231,76,60,0.1);color:#c0392b;border:1px solid rgba(231,76,60,0.25);font-size:0.78rem;"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#rejectJobModal{{ job.id }}"
+                                        title="Reject this job posting">
+                                    <i class="bi bi-x-circle"></i> Reject
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <!-- ── Reject Job Reason Modal ── -->
+                    <div class="modal fade" id="rejectJobModal{{ job.id }}" tabindex="-1"
+                         aria-labelledby="rejectJobModalLabel{{ job.id }}" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content glass-panel border-0" style="border-radius:var(--radius-md);">
+                                <div class="modal-header border-0 pb-0">
+                                    <h5 class="modal-title fw-700" id="rejectJobModalLabel{{ job.id }}">
+                                        <span style="color:#c0392b;">❌</span> Reject "{{ job.title }}"
+                                    </h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <form method="post" action="{% url 'job_reject' job.id %}">
+                                    {% csrf_token %}
+                                    <div class="modal-body pt-2">
+                                        <div class="mb-3 p-3 rounded" style="background:rgba(91,174,160,0.08);border:1px solid var(--border);">
+                                            <div class="d-flex gap-2 align-items-center mb-1">
+                                                <span style="font-size:1rem;">📋</span>
+                                                <span class="fw-600 small">{{ job.title }}</span>
+                                            </div>
+                                            <div class="small" style="color:var(--text-muted);">
+                                                <i class="bi bi-building me-1"></i>{{ job.company.name }}
+                                                {% if job.location %} &nbsp;·&nbsp; <i class="bi bi-geo-alt me-1"></i>{{ job.location }}{% endif %}
+                                            </div>
+                                        </div>
+                                        <p class="text-muted small mb-3">
+                                            The company owner will receive a notification. The job posting will be permanently deleted.
+                                        </p>
+                                        <label for="jobReason{{ job.id }}" class="form-label fw-600 small">
+                                            Rejection Reason <span class="text-muted fw-400">(optional)</span>
+                                        </label>
+                                        <textarea id="jobReason{{ job.id }}" name="reason" rows="3"
+                                                  class="form-control"
+                                                  style="border:1px solid var(--border);border-radius:var(--radius-sm);font-size:0.88rem;background:rgba(255,255,255,0.6);"
+                                                  placeholder="e.g. Misleading job description, duplicate posting, violates guidelines…"></textarea>
+                                    </div>
+                                    <div class="modal-footer border-0 pt-0">
+                                        <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">
+                                            Cancel
+                                        </button>
+                                        <button type="submit"
+                                                class="btn btn-sm"
+                                                style="background:#c0392b;color:#fff;border:none;">
+                                            <i class="bi bi-trash3 me-1"></i> Confirm Rejection
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- ── end modal ── -->
+
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+
+    {% else %}
+    <div class="glass-panel p-4 text-center">
+        <p class="text-muted mb-0"><i class="bi bi-check-circle me-2"></i>No jobs pending approval right now.</p>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

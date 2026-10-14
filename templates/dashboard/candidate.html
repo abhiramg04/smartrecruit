@@ -1,0 +1,297 @@
+{% extends 'base.html' %}
+
+{% block title %}Candidate Dashboard – SmartRecruit{% endblock %}
+
+{% block content %}
+
+<!-- Page Header -->
+<div class="page-header animate-fade-in">
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+        <div>
+            <h1 class="mb-1" style="font-size:1.6rem;">
+                👋 Welcome back, <span style="color:var(--cream);">{{ user.get_full_name|default:user.username }}</span>
+            </h1>
+            <p class="mb-0" style="color:rgba(254,255,214,0.75);font-size:0.9rem;">
+                Here's a snapshot of your job search progress
+            </p>
+        </div>
+        <a href="{% url 'job_list' %}" class="btn btn-sm px-4 py-2 fw-600"
+           style="background:rgba(254,255,214,0.20);color:var(--cream);border:1px solid rgba(254,255,214,0.35);border-radius:var(--radius-md);">
+            <i class="bi bi-search me-1"></i> Find Jobs
+        </a>
+    </div>
+</div>
+
+<!-- KPI Cards -->
+<div class="row g-3 mb-4 animate-children">
+
+    <div class="col-6 col-lg-3">
+        <div class="kpi-card">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+                <span class="kpi-label">Applications</span>
+                <div class="kpi-icon" style="width:40px;height:40px;border-radius:12px;font-size:1.1rem;">
+                    <i class="bi bi-file-person"></i>
+                </div>
+            </div>
+            <div class="kpi-value">{{ applications_count|default:"0" }}</div>
+            <div class="kpi-trend up mt-1"><i class="bi bi-arrow-up-short"></i> Submitted</div>
+        </div>
+    </div>
+
+    <div class="col-6 col-lg-3">
+        <div class="kpi-card">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+                <span class="kpi-label">Interviews</span>
+                <div class="kpi-icon" style="width:40px;height:40px;border-radius:12px;font-size:1.1rem;">
+                    <i class="bi bi-camera-video"></i>
+                </div>
+            </div>
+            <div class="kpi-value">{{ interviews_count|default:"0" }}</div>
+            <div class="kpi-trend up mt-1"><i class="bi bi-calendar-check"></i> Scheduled</div>
+        </div>
+    </div>
+
+    <div class="col-6 col-lg-3">
+        <div class="kpi-card">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+                <span class="kpi-label">Shortlisted</span>
+                <div class="kpi-icon" style="width:40px;height:40px;border-radius:12px;font-size:1.1rem;">
+                    <i class="bi bi-star"></i>
+                </div>
+            </div>
+            <div class="kpi-value">{{ shortlisted_count|default:"0" }}</div>
+            <div class="kpi-trend up mt-1"><i class="bi bi-check-circle"></i> Active</div>
+        </div>
+    </div>
+
+    <div class="col-6 col-lg-3">
+        <div class="kpi-card">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+                <span class="kpi-label">Offers</span>
+                <div class="kpi-icon" style="width:40px;height:40px;border-radius:12px;font-size:1.1rem;">
+                    <i class="bi bi-trophy"></i>
+                </div>
+            </div>
+            <div class="kpi-value">{{ offers_count|default:"0" }}</div>
+            <div class="kpi-trend up mt-1"><i class="bi bi-envelope-open"></i> Received</div>
+        </div>
+    </div>
+
+</div>
+
+<!-- Profile Completeness + Recent Activity -->
+<div class="row g-3 mb-4">
+
+    <!-- Profile Card -->
+    <div class="col-lg-4">
+        <div class="card h-100">
+            <div class="card-header d-flex align-items-center gap-2 py-3 px-4">
+                <i class="bi bi-person-circle text-teal"></i>
+                <span class="fw-700">My Profile</span>
+            </div>
+            <div class="card-body px-4 py-3">
+                <!-- Avatar -->
+                <div class="text-center mb-3">
+                    <div class="mx-auto mb-2 d-flex align-items-center justify-content-center rounded-circle fw-800"
+                         style="width:72px;height:72px;background:linear-gradient(135deg,var(--deep-teal),var(--teal));color:#fff;font-size:1.8rem;">
+                        {{ user.username|first|upper }}
+                    </div>
+                    <div class="fw-700" style="color:var(--text-primary);font-size:1rem;">
+                        {{ user.get_full_name|default:user.username }}
+                    </div>
+                    <div style="color:var(--text-muted);font-size:0.82rem;">{{ user.email }}</div>
+                    <span class="status-badge status-screening mt-2 d-inline-flex">
+                        <i class="bi bi-person-badge"></i> Candidate
+                    </span>
+                </div>
+
+                <!-- Completeness bar -->
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span style="font-size:0.8rem;font-weight:600;color:var(--text-secondary);">Profile Completeness</span>
+                        <span style="font-size:0.8rem;font-weight:700;color:var(--deep-teal);">{{ profile_completeness|default:"60" }}%</span>
+                    </div>
+                    <div class="progress">
+                        <div class="progress-bar" style="width:{{ profile_completeness|default:'60' }}%;"></div>
+                    </div>
+                    <div style="font-size:0.75rem;color:var(--text-muted);margin-top:0.3rem;">
+                        {{ completeness_message|default:"Upload your resume to reach 80%" }}
+                    </div>
+                </div>
+
+                <a href="{% url 'profile' %}" class="btn btn-outline-primary w-100" style="font-size:0.85rem;">
+                    <i class="bi bi-pencil me-1"></i> Update Profile
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="col-lg-8">
+        <div class="card h-100">
+            <div class="card-header d-flex align-items-center gap-2 py-3 px-4">
+                <i class="bi bi-lightning-charge text-teal"></i>
+                <span class="fw-700">Quick Actions</span>
+            </div>
+            <div class="card-body px-4 py-3">
+                <div class="row g-3">
+                    <div class="col-sm-6">
+                        <a href="{% url 'job_list' %}" class="d-flex align-items-center gap-3 p-3 text-decoration-none rounded-3"
+                           style="background:var(--bg-section);border:1px solid var(--border);transition:var(--transition);"
+                           onmouseover="this.style.background='var(--mint-light)'" onmouseout="this.style.background='var(--bg-section)'">
+                            <div style="width:46px;height:46px;border-radius:12px;background:linear-gradient(135deg,var(--deep-teal),var(--teal));display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.2rem;flex-shrink:0;">
+                                <i class="bi bi-search"></i>
+                            </div>
+                            <div>
+                                <div style="font-weight:700;color:var(--text-primary);font-size:0.9rem;">Browse Jobs</div>
+                                <div style="font-size:0.78rem;color:var(--text-muted);">Find your next role</div>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-sm-6">
+                        <a href="{% url 'profile' %}" class="d-flex align-items-center gap-3 p-3 text-decoration-none rounded-3"
+                           style="background:var(--bg-section);border:1px solid var(--border);transition:var(--transition);"
+                           onmouseover="this.style.background='var(--mint-light)'" onmouseout="this.style.background='var(--bg-section)'">
+                            <div style="width:46px;height:46px;border-radius:12px;background:linear-gradient(135deg,var(--deep-teal),var(--teal));display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.2rem;flex-shrink:0;">
+                                <i class="bi bi-upload"></i>
+                            </div>
+                            <div>
+                                <div style="font-weight:700;color:var(--text-primary);font-size:0.9rem;">Upload Resume</div>
+                                <div style="font-size:0.78rem;color:var(--text-muted);">AI-powered parsing</div>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-sm-6">
+                        <a href="{% url 'my_applications' %}" class="d-flex align-items-center gap-3 p-3 text-decoration-none rounded-3"
+                           style="background:var(--bg-section);border:1px solid var(--border);transition:var(--transition);"
+                           onmouseover="this.style.background='var(--mint-light)'" onmouseout="this.style.background='var(--bg-section)'">
+                            <div style="width:46px;height:46px;border-radius:12px;background:linear-gradient(135deg,var(--deep-teal),var(--teal));display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.2rem;flex-shrink:0;">
+                                <i class="bi bi-file-person"></i>
+                            </div>
+                            <div>
+                                <div style="font-weight:700;color:var(--text-primary);font-size:0.9rem;">My Applications</div>
+                                <div style="font-size:0.78rem;color:var(--text-muted);">Track your progress</div>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-sm-6">
+                        <a href="{% url 'notification_list' %}" class="d-flex align-items-center gap-3 p-3 text-decoration-none rounded-3"
+                           style="background:var(--bg-section);border:1px solid var(--border);transition:var(--transition);"
+                           onmouseover="this.style.background='var(--mint-light)'" onmouseout="this.style.background='var(--bg-section)'">
+                            <div style="width:46px;height:46px;border-radius:12px;background:linear-gradient(135deg,var(--deep-teal),var(--teal));display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.2rem;flex-shrink:0;">
+                                <i class="bi bi-bell"></i>
+                            </div>
+                            <div>
+                                <div style="font-weight:700;color:var(--text-primary);font-size:0.9rem;">Notifications</div>
+                                <div style="font-size:0.78rem;color:var(--text-muted);">
+                                    {% if unread_notifications_count %}{{ unread_notifications_count }} unread{% else %}All caught up{% endif %}
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- Application Status Timeline -->
+<div class="row g-3">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex align-items-center gap-2 py-3 px-4">
+                <i class="bi bi-diagram-3 text-teal"></i>
+                <span class="fw-700">Application Journey</span>
+                <span class="ms-auto" style="font-size:0.8rem;color:var(--text-muted);">Your recruitment stages</span>
+            </div>
+            <div class="card-body px-4 py-4">
+                <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+
+                    {% for stage, label, icon, color in stages %}
+                    <div class="text-center flex-fill">
+                        <div class="mx-auto mb-2 d-flex align-items-center justify-content-center rounded-circle"
+                             style="width:52px;height:52px;background:{{ color | default:'var(--primary)' }};color:#fff;font-size:1.2rem;">
+                            <i class="bi bi-{{ icon }}"></i>
+                        </div>
+                        <div style="font-size:0.78rem;font-weight:700;color:var(--text-primary);">{{ label }}</div>
+                        <div style="font-size:0.7rem;color:var(--text-muted);">{{ stage }}</div>
+                    </div>
+                    {% if not forloop.last %}
+                    <div style="flex:1;height:2px;background:var(--border);min-width:20px;max-width:60px;" class="d-none d-md-block"></div>
+                    {% endif %}
+                    {% empty %}
+                    <!-- Static fallback stages -->
+                    <div class="text-center flex-fill">
+                        <div class="mx-auto mb-2 d-flex align-items-center justify-content-center rounded-circle"
+                             style="width:52px;height:52px;background:var(--deep-teal);color:#fff;font-size:1.2rem;">
+                            <i class="bi bi-send"></i>
+                        </div>
+                        <div style="font-size:0.78rem;font-weight:700;color:var(--text-primary);">Applied</div>
+                        <div style="font-size:0.7rem;color:var(--text-muted);">Stage 1</div>
+                    </div>
+                    <div style="flex:1;height:2px;background:var(--border);" class="d-none d-md-block"></div>
+                    <div class="text-center flex-fill">
+                        <div class="mx-auto mb-2 d-flex align-items-center justify-content-center rounded-circle"
+                             style="width:52px;height:52px;background:var(--teal);color:#fff;font-size:1.2rem;">
+                            <i class="bi bi-file-earmark-text"></i>
+                        </div>
+                        <div style="font-size:0.78rem;font-weight:700;color:var(--text-primary);">Screening</div>
+                        <div style="font-size:0.7rem;color:var(--text-muted);">Stage 2</div>
+                    </div>
+                    <div style="flex:1;height:2px;background:var(--border);" class="d-none d-md-block"></div>
+                    <div class="text-center flex-fill">
+                        <div class="mx-auto mb-2 d-flex align-items-center justify-content-center rounded-circle"
+                             style="width:52px;height:52px;background:var(--teal);color:#fff;font-size:1.2rem;">
+                            <i class="bi bi-star"></i>
+                        </div>
+                        <div style="font-size:0.78rem;font-weight:700;color:var(--text-primary);">Shortlisted</div>
+                        <div style="font-size:0.7rem;color:var(--text-muted);">Stage 3</div>
+                    </div>
+                    <div style="flex:1;height:2px;background:var(--border);" class="d-none d-md-block"></div>
+                    <div class="text-center flex-fill">
+                        <div class="mx-auto mb-2 d-flex align-items-center justify-content-center rounded-circle"
+                             style="width:52px;height:52px;background:rgba(91,174,160,0.40);color:var(--deep-teal);font-size:1.2rem;">
+                            <i class="bi bi-camera-video"></i>
+                        </div>
+                        <div style="font-size:0.78rem;font-weight:700;color:var(--text-primary);">Interview</div>
+                        <div style="font-size:0.7rem;color:var(--text-muted);">Stage 4</div>
+                    </div>
+                    <div style="flex:1;height:2px;background:var(--border);" class="d-none d-md-block"></div>
+                    <div class="text-center flex-fill">
+                        <div class="mx-auto mb-2 d-flex align-items-center justify-content-center rounded-circle"
+                             style="width:52px;height:52px;background:rgba(91,174,160,0.20);color:var(--teal);font-size:1.2rem;">
+                            <i class="bi bi-briefcase"></i>
+                        </div>
+                        <div style="font-size:0.78rem;font-weight:700;color:var(--text-primary);">HR Round</div>
+                        <div style="font-size:0.7rem;color:var(--text-muted);">Stage 5</div>
+                    </div>
+                    <div style="flex:1;height:2px;background:var(--border);" class="d-none d-md-block"></div>
+                    <div class="text-center flex-fill">
+                        <div class="mx-auto mb-2 d-flex align-items-center justify-content-center rounded-circle"
+                             style="width:52px;height:52px;background:rgba(143,223,212,0.25);color:var(--text-muted);font-size:1.2rem;">
+                            <i class="bi bi-trophy"></i>
+                        </div>
+                        <div style="font-size:0.78rem;font-weight:700;color:var(--text-primary);">Offer</div>
+                        <div style="font-size:0.7rem;color:var(--text-muted);">Stage 6</div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Empty state -->
+                {% if not applications_count %}
+                <div class="text-center mt-4 py-3">
+                    <i class="bi bi-rocket-takeoff" style="font-size:2.5rem;color:var(--mint);"></i>
+                    <p class="mt-2 mb-1" style="font-weight:600;color:var(--text-secondary);">No applications yet</p>
+                    <p style="font-size:0.85rem;color:var(--text-muted);">Browse jobs and submit your first application to get started!</p>
+                    <a href="{% url 'job_list' %}" class="btn btn-primary-custom btn-sm px-4">
+                        <i class="bi bi-search me-1"></i> Find Jobs
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,143 @@
+{% extends 'base.html' %}
+
+{% block title %}Scheduled Interviews - SmartRecruit{% endblock %}
+
+{% block content %}
+<div class="page-header animate-fade-in d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+    <div>
+        <h1 class="fw-bold m-0" style="color: #1F6B5C !important;">Scheduled Interviews</h1>
+        <p class="mb-0 fw-600" style="color: #3D7A70 !important;">Manage your upcoming candidate interviews</p>
+    </div>
+    
+    <div class="d-flex gap-2 align-items-center">
+        <a href="?status=" class="btn btn-sm {% if not current_status %}btn-light fw-bold text-teal shadow-sm{% else %}btn-outline-light{% endif %} px-3 rounded-pill">All</a>
+        <a href="?status=SCHEDULED" class="btn btn-sm {% if current_status == 'SCHEDULED' %}btn-light fw-bold text-teal shadow-sm{% else %}btn-outline-light{% endif %} px-3 rounded-pill">Upcoming</a>
+        <a href="?status=COMPLETED" class="btn btn-sm {% if current_status == 'COMPLETED' %}btn-light fw-bold text-teal shadow-sm{% else %}btn-outline-light{% endif %} px-3 rounded-pill">Completed</a>
+        <a href="?status=CANCELLED" class="btn btn-sm {% if current_status == 'CANCELLED' %}btn-light fw-bold text-teal shadow-sm{% else %}btn-outline-light{% endif %} px-3 rounded-pill">Cancelled</a>
+    </div>
+</div>
+
+{% if interviews %}
+    <div class="row g-4 animate-children">
+        {% for interview in interviews %}
+        <div class="col-12">
+            <div class="card border-0 shadow-sm rounded-lg hover-lift" style="transition: transform 0.2s ease, box-shadow 0.2s ease;">
+                <div class="card-body p-4">
+                    <div class="row align-items-center g-3">
+                        
+                        <!-- Candidate & Job Info -->
+                        <div class="col-md-5">
+                            <h5 class="fw-bold text-dark mb-1">
+                                {{ interview.application.candidate.user.get_full_name|default:interview.application.candidate.user.username }}
+                            </h5>
+                            <p class="mb-2" style="color: var(--teal); font-weight: 600;">
+                                <a href="{% url 'job_detail' interview.application.job.pk %}" class="text-teal text-decoration-none">{{ interview.application.job.title }}</a>
+                            </p>
+                            <div class="d-flex flex-wrap gap-3 text-muted small">
+                                <span><i class="bi bi-envelope me-1 text-teal"></i>{{ interview.application.candidate.user.email }}</span>
+                                {% if interview.notes %}
+                                    <span class="text-truncate" style="max-width: 200px;" title="{{ interview.notes }}"><i class="bi bi-journal-text me-1 text-teal"></i>{{ interview.notes }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <!-- Schedule & Status -->
+                        <div class="col-md-4">
+                            <div class="d-flex flex-column gap-2">
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-calendar-event text-teal me-2 fs-5"></i>
+                                    <div>
+                                        <div class="fw-bold text-dark">{{ interview.scheduled_time|date:"M d, Y" }}</div>
+                                        <div class="small text-muted">{{ interview.scheduled_time|time:"g:i A" }} ({{ interview.duration_minutes }} mins)</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Actions & Badge -->
+                        <div class="col-md-4 text-md-end border-start-md ps-md-4">
+                            <div class="mb-3 d-flex align-items-center justify-content-md-end gap-2">
+                                <span class="badge rounded-pill px-3 py-2 fw-600 border 
+                                    {% if interview.status == 'SCHEDULED' %} bg-primary text-white border-primary
+                                    {% elif interview.status == 'COMPLETED' %} bg-success text-white border-success
+                                    {% elif interview.status == 'CANCELLED' %} bg-danger text-white border-danger
+                                    {% else %} bg-secondary text-white border-secondary {% endif %}" 
+                                    style="font-size: 0.85rem;">
+                                    {% if interview.status == 'SCHEDULED' %} <i class="bi bi-clock me-1"></i>
+                                    {% elif interview.status == 'COMPLETED' %} <i class="bi bi-check-circle me-1"></i>
+                                    {% elif interview.status == 'CANCELLED' %} <i class="bi bi-x-circle me-1"></i>
+                                    {% endif %}
+                                    {{ interview.get_status_display }}
+                                </span>
+                            </div>
+                            
+                            <div class="d-flex justify-content-md-end gap-1 flex-wrap">
+                                {% if interview.meeting_link %}
+                                    <a href="{{ interview.meeting_link }}" target="_blank" class="btn btn-sm btn-success fw-bold px-2 shadow-sm" title="Join Video Meeting">
+                                        <i class="bi bi-camera-video me-1"></i> Join
+                                    </a>
+                                {% endif %}
+                                <a href="{% url 'generate_interview_questions' interview.application.pk %}" class="btn btn-sm btn-outline-primary fw-600 px-2" title="AI Question Generator">
+                                    <i class="bi bi-stars me-1"></i> Questions
+                                </a>
+                                <a href="{% url 'upload_transcript' interview.application.pk %}" class="btn btn-sm btn-outline-info text-dark fw-600 px-2" title="Upload Transcript & Summary">
+                                    <i class="bi bi-file-text me-1"></i> Summary
+                                </a>
+                                <a href="{% url 'application_workflow' interview.application.pk %}" class="btn btn-sm btn-primary-custom fw-bold shadow-teal px-2">
+                                    Workflow
+                                </a>
+                            </div>
+                        </div>
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if is_paginated %}
+    <div class="d-flex justify-content-center mt-5">
+        <ul class="pagination pagination-sm shadow-sm">
+            {% if page_obj.has_previous %}
+                <li class="page-item"><a class="page-link text-teal fw-600" href="?page={{ page_obj.previous_page_number }}&status={{ current_status }}"><i class="bi bi-chevron-left"></i></a></li>
+            {% endif %}
+            
+            <li class="page-item active"><span class="page-link" style="background:var(--teal);border-color:var(--teal);">{{ page_obj.number }}</span></li>
+            
+            {% if page_obj.has_next %}
+                <li class="page-item"><a class="page-link text-teal fw-600" href="?page={{ page_obj.next_page_number }}&status={{ current_status }}"><i class="bi bi-chevron-right"></i></a></li>
+            {% endif %}
+        </ul>
+    </div>
+    {% endif %}
+
+{% else %}
+    <div class="card border-0 shadow-sm text-center py-5 mt-4">
+        <div class="card-body py-5">
+            <div class="mx-auto mb-4 d-flex align-items-center justify-content-center rounded-circle" 
+                 style="width: 80px; height: 80px; background: var(--mint-light); color: var(--teal);">
+                <i class="bi bi-calendar-x fs-1"></i>
+            </div>
+            <h4 class="fw-bold text-dark mb-2">No Interviews Found</h4>
+            <p class="text-muted mb-4 max-w-md mx-auto">There are currently no interviews matching this status.</p>
+        </div>
+    </div>
+{% endif %}
+
+<style>
+    .hover-lift:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 20px rgba(45, 139, 123, 0.1) !important;
+    }
+    @media (min-width: 768px) {
+        .border-start-md {
+            border-left: 1px solid var(--border);
+        }
+    }
+    .btn-outline-light:hover {
+        color: var(--teal) !important;
+    }
+</style>
+{% endblock %}

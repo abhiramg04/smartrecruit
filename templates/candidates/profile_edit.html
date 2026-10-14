@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Candidate Profile - SmartRecruit{% endblock %}
+
+{% block extra_css %}
+<style>
+  .edit-profile-card {
+    background: #ffffff;
+    border: 1px solid var(--border, rgba(91, 174, 160, 0.3));
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(45, 139, 123, 0.08);
+  }
+  .form-label-custom {
+    color: #1e293b;
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin-bottom: 0.4rem;
+    display: block;
+  }
+  .edit-profile-card .form-control {
+    background-color: #f8fafc;
+    border: 1px solid #cbd5e1;
+    color: #0f172a;
+    border-radius: 8px;
+    padding: 0.6rem 0.85rem;
+    font-size: 0.95rem;
+    transition: all 0.2s ease;
+  }
+  .edit-profile-card .form-control:focus {
+    background-color: #ffffff;
+    border-color: var(--deep-teal, #2D8B7B);
+    box-shadow: 0 0 0 3px rgba(45, 139, 123, 0.2);
+    color: #0f172a;
+  }
+  .form-help-text {
+    color: #64748b;
+    font-size: 0.8rem;
+    margin-top: 0.25rem;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4" style="max-width: 850px;">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-1" style="color: var(--text-primary, #1A4A42);">Edit Candidate Profile</h2>
+            <p class="text-secondary small mb-0">Update your personal details, summary, and technical skills.</p>
+        </div>
+        <a href="{% url 'candidate_profile' %}" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+            <i class="bi bi-arrow-left me-1"></i> Back to Profile
+        </a>
+    </div>
+
+    <div class="card edit-profile-card p-4 p-md-5">
+        <form method="post">
+            {% csrf_token %}
+
+            <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                    <label class="form-label-custom">Full Name</label>
+                    {{ form.full_name }}
+                    {% if form.full_name.errors %}
+                        <div class="text-danger small mt-1">{{ form.full_name.errors.0 }}</div>
+                    {% endif %}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label-custom">Email Address</label>
+                    {{ form.email }}
+                    {% if form.email.errors %}
+                        <div class="text-danger small mt-1">{{ form.email.errors.0 }}</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                    <label class="form-label-custom">Phone Number</label>
+                    {{ form.phone }}
+                    {% if form.phone.errors %}
+                        <div class="text-danger small mt-1">{{ form.phone.errors.0 }}</div>
+                    {% endif %}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label-custom">Location</label>
+                    {{ form.location }}
+                    {% if form.location.errors %}
+                        <div class="text-danger small mt-1">{{ form.location.errors.0 }}</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label-custom">Professional Summary</label>
+                {{ form.summary }}
+                {% if form.summary.errors %}
+                    <div class="text-danger small mt-1">{{ form.summary.errors.0 }}</div>
+                {% endif %}
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label-custom">Skills (Comma-Separated)</label>
+                {{ form.skills_text }}
+                <div class="form-help-text">Example: Python, Django, PostgreSQL, REST API, JavaScript</div>
+                {% if form.skills_text.errors %}
+                    <div class="text-danger small mt-1">{{ form.skills_text.errors.0 }}</div>
+                {% endif %}
+            </div>
+
+            <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <label class="form-label-custom">LinkedIn URL</label>
+                    {{ form.linkedin_url }}
+                    {% if form.linkedin_url.errors %}
+                        <div class="text-danger small mt-1">{{ form.linkedin_url.errors.0 }}</div>
+                    {% endif %}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label-custom">GitHub URL</label>
+                    {{ form.github_url }}
+                    {% if form.github_url.errors %}
+                        <div class="text-danger small mt-1">{{ form.github_url.errors.0 }}</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-end gap-2 pt-2 border-top">
+                <a href="{% url 'candidate_profile' %}" class="btn btn-outline-secondary px-4">Cancel</a>
+                <button type="submit" class="btn btn-success px-4" style="background-color: var(--deep-teal, #2D8B7B); border-color: var(--deep-teal, #2D8B7B);">Save Profile Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+

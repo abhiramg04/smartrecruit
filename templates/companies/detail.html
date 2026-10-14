@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ company.name }} - SmartRecruit{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-4">
+        <div class="glass-panel text-center">
+            {% if company.logo %}
+                <img src="{{ company.logo.url }}" alt="{{ company.name }}" class="img-fluid rounded-circle mb-3" style="width: 150px; height: 150px; object-fit: cover;">
+            {% else %}
+                <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center mx-auto mb-3 text-white" style="width: 150px; height: 150px; font-size: 3rem;">
+                    {{ company.name|make_list|first|upper }}
+                </div>
+            {% endif %}
+            <h3 class="fw-bold">{{ company.name }}</h3>
+            <p class="text-muted">{{ company.industry }} | {{ company.location }}</p>
+            
+            {% if not company.is_approved %}
+                <span class="badge bg-warning text-dark mb-3">Pending Admin Approval</span>
+            {% else %}
+                <span class="badge bg-success mb-3">Verified Company</span>
+            {% endif %}
+            
+            <div class="d-grid gap-2">
+                {% if company.website %}
+                    <a href="{{ company.website }}" target="_blank" class="btn btn-outline-primary btn-sm">Visit Website</a>
+                {% endif %}
+                {% if user == company.owner %}
+                    <a href="{% url 'company_update' company.id %}" class="btn btn-primary-custom btn-sm">Edit Profile</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-8">
+        <div class="glass-panel mb-4">
+            <h4 class="fw-bold mb-3">About Us</h4>
+            <p>{{ company.description|default:"No description provided yet."|linebreaks }}</p>
+        </div>
+        
+        <div class="glass-panel">
+            <h4 class="fw-bold mb-3">Departments</h4>
+            {% if company.departments.all %}
+                <ul class="list-group list-group-flush bg-transparent">
+                {% for dept in company.departments.all %}
+                    <li class="list-group-item bg-transparent border-teal">
+                        <strong>{{ dept.name }}</strong>
+                        <p class="mb-0 small text-muted">{{ dept.description }}</p>
+                    </li>
+                {% endfor %}
+                </ul>
+            {% else %}
+                <p class="text-muted">No departments added yet.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

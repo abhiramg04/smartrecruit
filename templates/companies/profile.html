@@ -1,0 +1,524 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Company Profile – {{ company.name }} | SmartRecruit{% endblock %}
+
+{% block extra_css %}
+<style>
+/* ── Profile Hero ── */
+.profile-hero {
+    background: linear-gradient(135deg, var(--deep-teal) 0%, var(--teal) 60%, rgba(143,223,212,0.80) 100%);
+    border-radius: var(--radius-lg);
+    padding: 2.5rem;
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 0;
+}
+.profile-hero::before {
+    content: '';
+    position: absolute;
+    width: 400px; height: 400px; border-radius: 50%;
+    background: rgba(254,255,214,0.07);
+    top: -120px; right: -80px;
+}
+.profile-hero::after {
+    content: '';
+    position: absolute;
+    width: 220px; height: 220px; border-radius: 50%;
+    background: rgba(254,255,214,0.05);
+    bottom: -60px; left: 5%;
+}
+
+/* ── Avatar ── */
+.company-avatar {
+    width: 100px; height: 100px; border-radius: 24px;
+    background: rgba(254,255,214,0.18);
+    border: 3px solid rgba(254,255,214,0.35);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 2.8rem; font-weight: 800;
+    color: var(--cream); flex-shrink: 0;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+}
+
+/* ── Profile card overlap ── */
+.profile-card-overlap {
+    margin-top: 1rem;
+    position: relative;
+    z-index: 10;
+}
+
+/* ── Info card ── */
+.info-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 2rem;
+    box-shadow: 0 4px 24px rgba(45,139,123,0.10);
+    transition: var(--transition);
+}
+.info-card:hover { box-shadow: 0 8px 40px rgba(45,139,123,0.15); }
+
+/* ── Stat pill ── */
+.stat-pill {
+    background: rgba(45,139,123,0.08);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 1.2rem 1.5rem;
+    text-align: center;
+    transition: var(--transition);
+}
+.stat-pill:hover { background: rgba(45,139,123,0.14); transform: translateY(-2px); }
+.stat-pill .stat-value { font-size: 1.8rem; font-weight: 800; color: var(--deep-teal); line-height: 1; }
+.stat-pill .stat-label { font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 0.3rem; }
+
+/* ── Section heading ── */
+.section-heading {
+    font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.1em; color: var(--teal);
+    margin-bottom: 1rem; padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--mint-light);
+}
+
+/* ── Field row ── */
+.field-row { display: flex; align-items: flex-start; gap: 0.75rem; padding: 0.75rem 0; border-bottom: 1px solid rgba(91,174,160,0.12); }
+.field-row:last-child { border-bottom: none; }
+.field-icon { width: 36px; height: 36px; border-radius: 10px; background: var(--mint-light); display: flex; align-items: center; justify-content: center; color: var(--deep-teal); font-size: 1rem; flex-shrink: 0; }
+.field-label { font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); margin-bottom: 0.15rem; }
+.field-value { font-size: 0.92rem; font-weight: 500; color: var(--text-primary); }
+
+/* ── Badge approved ── */
+.badge-approved { background: rgba(34,197,94,0.12); color: #166534; border: 1px solid rgba(34,197,94,0.30); padding: 0.35rem 0.9rem; border-radius: 50px; font-size: 0.78rem; font-weight: 700; }
+.badge-pending  { background: rgba(234,179,8,0.12);  color: #854d0e; border: 1px solid rgba(234,179,8,0.30);  padding: 0.35rem 0.9rem; border-radius: 50px; font-size: 0.78rem; font-weight: 700; }
+
+/* ── Dept chip ── */
+.dept-chip {
+    display: flex; align-items: center; gap: 0.6rem;
+    background: rgba(45,139,123,0.06);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 0.8rem 1rem;
+    transition: var(--transition);
+}
+.dept-chip:hover { background: rgba(45,139,123,0.12); transform: translateX(4px); }
+.dept-chip .dept-icon { width: 32px; height: 32px; border-radius: 8px; background: var(--mint-light); display: flex; align-items: center; justify-content: center; color: var(--deep-teal); font-size: 0.9rem; flex-shrink: 0; }
+
+/* ── Edit form inputs ── */
+.edit-form .form-control,
+.edit-form .form-select {
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 0.9rem;
+    color: var(--text-primary);
+    background: rgba(255,255,255,0.8);
+    transition: var(--transition);
+}
+.edit-form .form-control:focus,
+.edit-form .form-select:focus {
+    border-color: var(--teal);
+    box-shadow: 0 0 0 3px rgba(91,174,160,0.18);
+}
+.edit-form label { font-size: 0.78rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.4rem; }
+
+/* ── Toggle sections ── */
+.section-toggle { display: none; }
+.section-view  { display: block; }
+
+/* ── Animations ── */
+@keyframes fadeSlideIn {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+.animate-in { animation: fadeSlideIn 0.4s ease both; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+{% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show mb-4" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    {% endfor %}
+{% endif %}
+
+<!-- ── Hero Banner ── -->
+<div class="profile-hero animate-in">
+    <div class="d-flex align-items-center gap-4 position-relative" style="z-index:2;">
+        <div class="company-avatar">
+            {{ company.name|make_list|first|upper }}
+        </div>
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
+                <h1 class="mb-0 fw-800" style="color:var(--cream);font-size:1.8rem;letter-spacing:-0.03em;">
+                    {{ company.name }}
+                </h1>
+                {% if company.is_approved %}
+                    <span class="badge-approved"><i class="bi bi-patch-check-fill me-1"></i>Verified</span>
+                {% else %}
+                    <span class="badge-pending"><i class="bi bi-clock me-1"></i>Pending Approval</span>
+                {% endif %}
+            </div>
+            <p class="mb-0" style="color:rgba(254,255,214,0.80);font-size:0.95rem;font-weight:500;">
+                {% if company.industry %}<span class="me-3"><i class="bi bi-building me-1"></i>{{ company.industry }}</span>{% endif %}
+                {% if company.location %}<span><i class="bi bi-geo-alt me-1"></i>{{ company.location }}</span>{% endif %}
+            </p>
+        </div>
+    </div>
+</div>
+
+<!-- ── Stat pills overlap ── -->
+<div class="profile-card-overlap px-2">
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="stat-pill animate-in" style="animation-delay:0.05s;">
+                <div class="stat-value text-teal">{{ active_jobs_count|default:"0" }}</div>
+                <div class="stat-label">Active Jobs</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="stat-pill animate-in" style="animation-delay:0.10s;">
+                <div class="stat-value" style="color:#0284c7;">{{ total_applications|default:"0" }}</div>
+                <div class="stat-label">Applications</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="stat-pill animate-in" style="animation-delay:0.15s;">
+                <div class="stat-value" style="color:#7c3aed;">{{ company.departments.count|default:"0" }}</div>
+                <div class="stat-label">Departments</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="stat-pill animate-in" style="animation-delay:0.20s;">
+                <div class="stat-value" style="color:#059669;">{{ company.created_at|date:"Y" }}</div>
+                <div class="stat-label">Member Since</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ── Main Content ── -->
+<div class="row g-4">
+
+    <!-- Left: Company Details + Edit -->
+    <div class="col-lg-5 animate-in" style="animation-delay:0.25s;">
+
+        <!-- Company Info Card -->
+        <div class="info-card mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <span class="section-heading mb-0">Company Details</span>
+                <button class="btn btn-sm fw-600" id="toggleEditBtn"
+                        style="background:rgba(45,139,123,0.10);color:var(--deep-teal);border:1px solid var(--border);border-radius:var(--radius-sm);"
+                        onclick="toggleEdit()">
+                    <i class="bi bi-pencil me-1"></i> Edit
+                </button>
+            </div>
+
+            <!-- View Mode -->
+            <div id="viewSection" class="section-view">
+                <div class="field-row">
+                    <div class="field-icon"><i class="bi bi-person"></i></div>
+                    <div>
+                        <div class="field-label">Recruiter Name</div>
+                        <div class="field-value">{{ user.get_full_name|default:user.username }}</div>
+                    </div>
+                </div>
+                <div class="field-row">
+                    <div class="field-icon"><i class="bi bi-envelope"></i></div>
+                    <div>
+                        <div class="field-label">Email</div>
+                        <div class="field-value">{{ user.email }}</div>
+                    </div>
+                </div>
+                <div class="field-row">
+                    <div class="field-icon"><i class="bi bi-telephone"></i></div>
+                    <div>
+                        <div class="field-label">Phone</div>
+                        <div class="field-value">{{ user.phone|default:"—" }}</div>
+                    </div>
+                </div>
+                <div class="field-row">
+                    <div class="field-icon"><i class="bi bi-badge-ad"></i></div>
+                    <div>
+                        <div class="field-label">Designation</div>
+                        <div class="field-value">{{ user.designation|default:"Recruiter / Hiring Manager" }}</div>
+                    </div>
+                </div>
+
+                <hr class="my-3 border-mint">
+
+                <div class="field-row">
+                    <div class="field-icon"><i class="bi bi-building"></i></div>
+                    <div>
+                        <div class="field-label">Company Name</div>
+                        <div class="field-value">{{ company.name }}</div>
+                    </div>
+                </div>
+                <div class="field-row">
+                    <div class="field-icon"><i class="bi bi-tags"></i></div>
+                    <div>
+                        <div class="field-label">Industry</div>
+                        <div class="field-value">{{ company.industry|default:"—" }}</div>
+                    </div>
+                </div>
+                <div class="field-row">
+                    <div class="field-icon"><i class="bi bi-geo-alt"></i></div>
+                    <div>
+                        <div class="field-label">Location</div>
+                        <div class="field-value">{{ company.location|default:"—" }}</div>
+                    </div>
+                </div>
+                <div class="field-row">
+                    <div class="field-icon"><i class="bi bi-globe"></i></div>
+                    <div>
+                        <div class="field-label">Website</div>
+                        <div class="field-value">
+                            {% if company.website %}
+                                <a href="{{ company.website }}" target="_blank" class="text-teal fw-600">
+                                    {{ company.website }} <i class="bi bi-box-arrow-up-right ms-1" style="font-size:0.75rem;"></i>
+                                </a>
+                            {% else %}—{% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Edit Mode -->
+            <div id="editSection" class="section-toggle">
+                <form method="post" action="{% url 'company_profile' %}" class="edit-form">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="update_info">
+
+                    <h6 class="fw-bold text-teal mb-3">Recruiter Profile</h6>
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-6">
+                            <label for="id_first_name"><i class="bi bi-person me-1"></i>First Name</label>
+                            <input type="text" id="id_first_name" name="first_name" class="form-control" value="{{ user.first_name }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="id_last_name"><i class="bi bi-person me-1"></i>Last Name</label>
+                            <input type="text" id="id_last_name" name="last_name" class="form-control" value="{{ user.last_name }}">
+                        </div>
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-6">
+                            <label for="id_email"><i class="bi bi-envelope me-1"></i>Email</label>
+                            <input type="email" id="id_email" name="email" class="form-control" value="{{ user.email }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="id_phone"><i class="bi bi-telephone me-1"></i>Phone</label>
+                            <input type="text" id="id_phone" name="phone" class="form-control" value="{{ user.phone|default:'' }}" placeholder="+1 234 567 890">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_designation"><i class="bi bi-badge-ad me-1"></i>Designation</label>
+                        <input type="text" id="id_designation" name="designation" class="form-control" value="{{ user.designation|default:'' }}" placeholder="e.g. Lead Talent Acquisition Partner">
+                    </div>
+
+                    <h6 class="fw-bold text-teal mb-3 mt-4">Company Information</h6>
+                    <div class="mb-3">
+                        <label for="id_name"><i class="bi bi-building me-1"></i>Company Name</label>
+                        <input type="text" id="id_name" name="name" class="form-control"
+                               value="{{ company.name }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_industry"><i class="bi bi-tags me-1"></i>Industry</label>
+                        <input type="text" id="id_industry" name="industry" class="form-control"
+                               value="{{ company.industry|default:'' }}" placeholder="e.g. Technology, Finance…">
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_location"><i class="bi bi-geo-alt me-1"></i>Location</label>
+                        <input type="text" id="id_location" name="location" class="form-control"
+                               value="{{ company.location|default:'' }}" placeholder="City, Country">
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_website"><i class="bi bi-globe me-1"></i>Website <span class="text-muted fw-normal lowercase">(Optional)</span></label>
+                        <input type="text" id="id_website" name="website" class="form-control"
+                               value="{{ company.website|default:'' }}" placeholder="e.g. https://yourcompany.com (Optional)">
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_description"><i class="bi bi-card-text me-1"></i>Description</label>
+                        <textarea id="id_description" name="description" class="form-control" rows="4"
+                                  placeholder="Tell candidates about your company…">{{ company.description|default:'' }}</textarea>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary-custom fw-600 px-4">
+                            <i class="bi bi-check2 me-1"></i>Save Changes
+                        </button>
+                        <button type="button" class="btn fw-600 px-4"
+                                style="background:rgba(91,174,160,0.1);color:var(--text-secondary);border:1px solid var(--border);"
+                                onclick="toggleEdit()">
+                            Cancel
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Subscription Card -->
+        <div class="info-card">
+            <span class="section-heading d-block">Subscription Plan</span>
+            {% if company.subscription %}
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <div style="width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,var(--deep-teal),var(--teal));display:flex;align-items:center;justify-content:center;">
+                        <i class="bi bi-gem" style="color:var(--cream);font-size:1.3rem;"></i>
+                    </div>
+                    <div>
+                        <div class="fw-700" style="color:var(--deep-teal);font-size:1.1rem;">{{ company.subscription.name }}</div>
+                        <div class="text-muted small">${{ company.subscription.price }}/month</div>
+                    </div>
+                </div>
+                <div class="row g-2">
+                    <div class="col-6">
+                        <div class="stat-pill p-2">
+                            <div class="stat-value" style="font-size:1.2rem;">{{ company.subscription.max_jobs }}</div>
+                            <div class="stat-label">Max Jobs</div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="stat-pill p-2">
+                            <div class="stat-value" style="font-size:1.2rem;">{{ company.subscription.max_recruiters }}</div>
+                            <div class="stat-label">Max Recruiters</div>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <div class="text-center py-3">
+                    <i class="bi bi-gem text-muted" style="font-size:2rem;"></i>
+                    <p class="text-muted small mt-2 mb-0">No subscription plan assigned yet.<br>Contact admin to upgrade.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Right: About + Departments -->
+    <div class="col-lg-7">
+
+        <!-- About Section -->
+        <div class="info-card mb-4 animate-in" style="animation-delay:0.30s;">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <span class="section-heading mb-0">About the Company</span>
+            </div>
+            {% if company.description %}
+                <p style="color:var(--text-primary);line-height:1.75;font-size:0.93rem;">
+                    {{ company.description|linebreaks }}
+                </p>
+            {% else %}
+                <div class="text-center py-3">
+                    <i class="bi bi-file-text text-muted" style="font-size:2rem;opacity:0.5;"></i>
+                    <p class="text-muted small mt-2 mb-1">No description added yet.</p>
+                    <button onclick="toggleEdit()" class="btn btn-sm"
+                            style="background:rgba(45,139,123,0.10);color:var(--deep-teal);border:1px solid var(--border);">
+                        <i class="bi bi-pencil me-1"></i>Add Description
+                    </button>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Departments -->
+        <div class="info-card animate-in" style="animation-delay:0.35s;">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <span class="section-heading mb-0">Departments</span>
+                <button class="btn btn-sm fw-600" data-bs-toggle="modal" data-bs-target="#addDeptModal"
+                        style="background:rgba(45,139,123,0.10);color:var(--deep-teal);border:1px solid var(--border);border-radius:var(--radius-sm);">
+                    <i class="bi bi-plus me-1"></i>Add
+                </button>
+            </div>
+
+            {% if company.departments.all %}
+                <div class="d-flex flex-column gap-2">
+                    {% for dept in company.departments.all %}
+                    <div class="dept-chip">
+                        <div class="dept-icon"><i class="bi bi-diagram-3"></i></div>
+                        <div class="flex-grow-1">
+                            <div class="fw-600" style="color:var(--text-primary);font-size:0.9rem;">{{ dept.name }}</div>
+                            {% if dept.description %}
+                                <div class="text-muted small">{{ dept.description }}</div>
+                            {% endif %}
+                        </div>
+                        <form method="post" action="{% url 'company_profile' %}" class="d-inline"
+                              onsubmit="return confirm('Delete this department?');">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="delete_dept">
+                            <input type="hidden" name="dept_id" value="{{ dept.id }}">
+                            <button type="submit" class="btn btn-sm p-1"
+                                    style="color:#e05252;background:none;border:none;" title="Remove">
+                                <i class="bi bi-trash3"></i>
+                            </button>
+                        </form>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-3">
+                    <i class="bi bi-diagram-3 text-muted" style="font-size:2rem;opacity:0.5;"></i>
+                    <p class="text-muted small mt-2 mb-0">No departments added yet.</p>
+                </div>
+            {% endif %}
+        </div>
+
+    </div>
+</div>
+
+<!-- ── Add Department Modal ── -->
+<div class="modal fade" id="addDeptModal" tabindex="-1" aria-labelledby="addDeptModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius:var(--radius-lg);border:1px solid var(--border);">
+            <div class="modal-header" style="border-bottom:1px solid var(--border);background:rgba(45,139,123,0.05);">
+                <h5 class="modal-title fw-700" id="addDeptModalLabel" style="color:var(--deep-teal);">
+                    <i class="bi bi-diagram-3 me-2"></i>Add Department
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="{% url 'company_profile' %}">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="add_dept">
+                <div class="modal-body p-4 edit-form">
+                    <div class="mb-3">
+                        <label for="dept_name">Department Name</label>
+                        <input type="text" id="dept_name" name="dept_name" class="form-control"
+                               placeholder="e.g. Engineering, Marketing, HR…" required>
+                    </div>
+                    <div class="mb-1">
+                        <label for="dept_desc">Description <span class="text-muted fw-400">(optional)</span></label>
+                        <textarea id="dept_desc" name="dept_description" class="form-control" rows="3"
+                                  placeholder="Brief description of this department…"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer" style="border-top:1px solid var(--border);">
+                    <button type="button" class="btn" data-bs-dismiss="modal"
+                            style="background:rgba(91,174,160,0.1);color:var(--text-secondary);border:1px solid var(--border);">
+                        Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary-custom fw-600 px-4">
+                        <i class="bi bi-plus-lg me-1"></i>Add Department
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function toggleEdit() {
+    const view = document.getElementById('viewSection');
+    const edit = document.getElementById('editSection');
+    const btn  = document.getElementById('toggleEditBtn');
+    const isEditing = edit.style.display === 'block';
+    if (isEditing) {
+        edit.style.display = 'none';
+        view.style.display = 'block';
+        btn.innerHTML = '<i class="bi bi-pencil me-1"></i> Edit';
+    } else {
+        view.style.display = 'none';
+        edit.style.display = 'block';
+        btn.innerHTML = '<i class="bi bi-x me-1"></i> Cancel';
+    }
+}
+</script>
+{% endblock %}

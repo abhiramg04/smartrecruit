@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+
+{% block title %}Technical Skill Assessments – SmartRecruit{% endblock %}
+
+{% block content %}
+<div class="animate-fade-in">
+
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+        <div>
+            <h1 class="fw-bold m-0" style="color: var(--cream);">Technical Skill Assessments</h1>
+            <p class="mb-0 text-white-50">Manage test suites and view candidate technical assessment results.</p>
+        </div>
+        <a href="{% url 'assessment_create' %}" class="btn btn-primary-custom fw-bold shadow-teal">
+            <i class="bi bi-plus-lg me-1"></i> Create Assessment
+        </a>
+    </div>
+
+    <!-- Active Test Suites -->
+    <div class="card border-0 shadow-sm rounded-lg mb-5" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1);">
+        <div class="card-header bg-transparent border-bottom border-secondary border-opacity-10 py-3">
+            <h5 class="fw-bold m-0 text-white"><i class="bi bi-journal-code text-teal me-2"></i> Created Assessment Tests</h5>
+        </div>
+        <div class="card-body p-0">
+            {% if tests %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0" style="color: var(--text-primary);">
+                    <thead style="background: rgba(255,255,255,0.05);">
+                        <tr>
+                            <th class="ps-4">Title</th>
+                            <th>Job Role</th>
+                            <th>Duration</th>
+                            <th>Passing Score</th>
+                            <th>Created</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for test in tests %}
+                        <tr>
+                            <td class="ps-4 fw-bold text-white">{{ test.title }}</td>
+                            <td><span class="badge badge-cream text-teal">{{ test.job.title }}</span></td>
+                            <td><i class="bi bi-clock me-1 text-muted"></i>{{ test.duration_minutes }} mins</td>
+                            <td><span class="fw-bold text-success">{{ test.passing_score }}%</span></td>
+                            <td class="text-secondary small">{{ test.created_at|date:"M d, Y" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="p-4 text-center text-white-50">
+                <i class="bi bi-journal-x fs-1 d-block mb-2"></i>
+                No assessment tests created yet. Click "Create Assessment" to add one.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Candidate Results -->
+    <div class="card border-0 shadow-sm rounded-lg" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1);">
+        <div class="card-header bg-transparent border-bottom border-secondary border-opacity-10 py-3">
+            <h5 class="fw-bold m-0 text-white"><i class="bi bi-people text-teal me-2"></i> Candidate Assessment Submissions</h5>
+        </div>
+        <div class="card-body p-0">
+            {% if assigned_assessments %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0" style="color: var(--text-primary);">
+                    <thead style="background: rgba(255,255,255,0.05);">
+                        <tr>
+                            <th class="ps-4">Candidate</th>
+                            <th>Assessment</th>
+                            <th>Status</th>
+                            <th>Score</th>
+                            <th>Result</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for ca in assigned_assessments %}
+                        <tr>
+                            <td class="ps-4 fw-bold text-white">{{ ca.candidate.full_name|default:ca.candidate.user.get_full_name }}</td>
+                            <td>{{ ca.test.title }}</td>
+                            <td>
+                                {% if ca.status == 'COMPLETED' %}
+                                    <span class="badge bg-success bg-opacity-20 text-success">Completed</span>
+                                {% else %}
+                                    <span class="badge bg-warning bg-opacity-20 text-warning">Pending</span>
+                                {% endif %}
+                            </td>
+                            <td class="fw-bold">{{ ca.score }}%</td>
+                            <td>
+                                {% if ca.status == 'COMPLETED' %}
+                                    {% if ca.passed %}
+                                        <span class="badge bg-success text-white">PASSED</span>
+                                    {% else %}
+                                        <span class="badge bg-danger text-white">FAILED</span>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-secondary small">{{ ca.assigned_at|date:"M d, Y" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="p-4 text-center text-white-50">
+                <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                No candidate assessment submissions recorded.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+</div>
+{% endblock %}

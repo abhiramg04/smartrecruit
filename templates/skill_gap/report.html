@@ -1,0 +1,304 @@
+{% extends 'base.html' %}
+
+{% block title %}Skill Gap Report — {{ report.job.title }} - SmartRecruit{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* ── Hero ── */
+  .gap-hero {
+    border-radius: 20px; padding: 2.5rem;
+    background: linear-gradient(135deg, rgba(99,102,241,0.12), rgba(168,85,247,0.08));
+    border: 1px solid rgba(99,102,241,0.3);
+    position: relative; overflow: hidden;
+  }
+  .gap-hero::before {
+    content:''; position:absolute; top:-60px; right:-60px;
+    width:200px; height:200px; border-radius:50%;
+    background: radial-gradient(circle, rgba(99,102,241,0.2), transparent 70%);
+  }
+
+  /* ── Big Score ── */
+  .score-circle {
+    width: 110px; height: 110px; border-radius: 50%;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    background: conic-gradient(
+      {% if report.match_percentage >= 70 %}#4ade80{% elif report.match_percentage >= 45 %}#fbbf24{% else %}#f87171{% endif %}
+      {{ report.match_percentage }}%, rgba(255,255,255,0.08) 0%
+    );
+    box-shadow: 0 0 0 6px rgba(255,255,255,0.06);
+    position: relative;
+  }
+  .score-circle-inner {
+    width: 80px; height: 80px; border-radius: 50%;
+    background: #0f0f1a;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+  }
+
+  /* ── Skill Tags ── */
+  .tag-matched { background:rgba(74,222,128,.12); border:1px solid rgba(74,222,128,.3); color:#4ade80; border-radius:6px; padding:4px 12px; font-size:.78rem; margin:3px; display:inline-block; }
+  .tag-missing  { background:rgba(248,113,113,.1);  border:1px solid rgba(248,113,113,.3);  color:#f87171; border-radius:6px; padding:4px 12px; font-size:.78rem; margin:3px; display:inline-block; }
+  .tag-extra    { background:rgba(99,102,241,.1);    border:1px solid rgba(99,102,241,.3);    color:#a5b4fc; border-radius:6px; padding:4px 12px; font-size:.78rem; margin:3px; display:inline-block; }
+
+  /* ── Learning Path ── */
+  .path-timeline { position:relative; padding-left: 2.5rem; }
+  .path-timeline::before {
+    content:''; position:absolute; left:14px; top:0; bottom:0; width:2px;
+    background: linear-gradient(to bottom, #6366f1, #a855f7, rgba(99,102,241,0));
+  }
+  .path-step {
+    position:relative; padding: 1rem 1.2rem;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 12px; margin-bottom: 1rem;
+    transition: border-color 0.2s;
+  }
+  .path-step:hover { border-color: rgba(99,102,241,0.4); }
+  .path-step-num {
+    position: absolute; left: -2.5rem; top: 50%; transform: translateY(-50%);
+    width: 28px; height: 28px; border-radius: 50%;
+    background: linear-gradient(135deg,#6366f1,#a855f7);
+    display:flex; align-items:center; justify-content:center;
+    font-size: 0.75rem; font-weight:700; color: white;
+    z-index: 1;
+  }
+
+  /* ── Course Cards ── */
+  .course-card {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px; padding: 1rem 1.2rem;
+    transition: all 0.2s ease; height: 100%;
+  }
+  .course-card:hover { border-color: rgba(99,102,241,0.45); transform: translateY(-2px); }
+  .course-hours-badge {
+    display:inline-flex; align-items:center; gap:4px;
+    background: rgba(99,102,241,0.15); color: #a5b4fc;
+    border-radius:99px; padding:2px 10px; font-size:0.72rem;
+  }
+
+  /* ── Cert Cards ── */
+  .cert-card {
+    display:flex; align-items:center; gap:12px;
+    background:rgba(251,191,36,.08); border:1px solid rgba(251,191,36,.25);
+    border-radius:10px; padding:0.8rem 1rem; margin-bottom:0.6rem;
+  }
+  .section-divider {
+    font-size:.68rem; letter-spacing:2px; font-weight:700;
+    text-transform:uppercase; color:#818cf8; margin-bottom:1rem;
+    display:flex; align-items:center; gap:8px;
+  }
+  .section-divider::after { content:''; flex:1; height:1px; background:rgba(99,102,241,.2); }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- Breadcrumb + Actions -->
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+  <p class="text-white-50 small mb-0">
+    <a href="{% url 'skill_gap_select' %}" class="text-white-50 text-decoration-none">← Skill Gap Analyzer</a>
+  </p>
+  <div class="d-flex gap-2">
+    <a href="{% url 'skill_gap_print' report.pk %}" target="_blank" class="btn btn-outline-light btn-sm">
+      <i class="bi bi-file-pdf me-1"></i> Export PDF
+    </a>
+    <form action="{% url 'skill_gap_analyze' %}" method="post" class="d-inline">
+      {% csrf_token %}
+      <input type="hidden" name="job_id" value="{{ report.job.id }}">
+      <button type="submit" class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-arrow-repeat me-1"></i> Re-Analyze
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- Hero Section -->
+<div class="gap-hero mb-4">
+  <div class="row align-items-center">
+    <div class="col-md-8">
+      <h2 class="fw-bold mb-1">{{ report.job.title }}</h2>
+      <p class="text-primary mb-3">{{ report.job.company.name }}</p>
+      {% if report.ai_summary %}
+      <p class="text-white-80 mb-3" style="line-height:1.7; font-size:0.95rem;">{{ report.ai_summary }}</p>
+      {% endif %}
+      <div class="d-flex gap-3 flex-wrap">
+        <span class="badge bg-success bg-opacity-25 text-success px-3 py-2">
+          <i class="bi bi-check-circle me-1"></i>{{ report.matched_skills|length }} Matched
+        </span>
+        <span class="badge bg-danger bg-opacity-25 text-danger px-3 py-2">
+          <i class="bi bi-x-circle me-1"></i>{{ report.missing_skills|length }} Missing
+        </span>
+        <span class="badge bg-secondary bg-opacity-50 px-3 py-2">
+          <i class="bi bi-clock me-1"></i>~{{ report.estimated_hours }}hrs / {{ weeks_estimate }} weeks
+        </span>
+      </div>
+    </div>
+    <div class="col-md-4 text-center mt-3 mt-md-0">
+      <div class="score-circle mx-auto">
+        <div class="score-circle-inner">
+          <span class="fw-bold" style="font-size:1.5rem;">{{ report.match_percentage|floatformat:0 }}%</span>
+          <span class="text-white-50" style="font-size:0.65rem;">MATCH</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Charts Row -->
+<div class="row g-4 mb-4">
+  <!-- Donut Chart -->
+  <div class="col-md-4">
+    <div class="glass-panel text-center h-100">
+      <div class="section-divider justify-content-center">Skill Coverage</div>
+      <canvas id="donutChart" height="220"></canvas>
+    </div>
+  </div>
+
+  <!-- Skill Tags -->
+  <div class="col-md-8">
+    <div class="glass-panel h-100">
+      <div class="section-divider">Matched Skills</div>
+      <div class="mb-4">
+        {% if report.matched_skills %}
+          {% for skill in report.matched_skills %}
+            <span class="tag-matched">✓ {{ skill }}</span>
+          {% endfor %}
+        {% else %}
+          <p class="text-white-50 small">No direct matches found.</p>
+        {% endif %}
+      </div>
+
+      <div class="section-divider">Missing Skills</div>
+      <div class="mb-4">
+        {% if report.missing_skills %}
+          {% for skill in report.missing_skills %}
+            <span class="tag-missing">✗ {{ skill }}</span>
+          {% endfor %}
+        {% else %}
+          <p class="text-success small">🎉 You have all required skills!</p>
+        {% endif %}
+      </div>
+
+      {% if report.extra_skills %}
+      <div class="section-divider">Extra Skills You Have</div>
+      <div>
+        {% for skill in report.extra_skills %}
+          <span class="tag-extra">+ {{ skill }}</span>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<div class="row g-4">
+  <!-- Learning Path Timeline -->
+  <div class="col-lg-6">
+    <div class="glass-panel">
+      <div class="section-divider"><i class="bi bi-map me-1"></i>AI Learning Path</div>
+
+      {% if report.learning_path %}
+      <div class="path-timeline">
+        {% for step in report.learning_path %}
+        <div class="path-step">
+          <div class="path-step-num">{{ step.step }}</div>
+          <div class="d-flex justify-content-between align-items-start flex-wrap gap-1 mb-1">
+            <p class="fw-bold mb-0 small">{{ step.skill }}</p>
+            <span class="course-hours-badge">
+              <i class="bi bi-clock"></i> {{ step.estimated_hours }}hrs
+            </span>
+          </div>
+          <p class="text-white-50 mb-0" style="font-size:0.82rem;">{{ step.action }}</p>
+          <p class="text-primary mb-0" style="font-size:0.78rem;">📚 {{ step.resource }}</p>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+        <p class="text-white-50 text-center py-3">No learning path required — you're fully ready!</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <!-- Recommended Courses -->
+    <div class="glass-panel mb-4">
+      <div class="section-divider"><i class="bi bi-play-circle me-1"></i>Recommended Courses</div>
+      {% if report.recommended_courses %}
+        <div class="row g-2">
+          {% for course in report.recommended_courses %}
+          <div class="col-12">
+            <div class="course-card">
+              <div class="d-flex justify-content-between align-items-start mb-1">
+                <span class="badge bg-primary bg-opacity-25 text-primary" style="font-size:0.7rem;">{{ course.skill }}</span>
+                <span class="course-hours-badge"><i class="bi bi-clock"></i> {{ course.hours }}hrs</span>
+              </div>
+              <p class="fw-semibold small mb-0">{{ course.course }}</p>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p class="text-white-50 small text-center">No courses needed — great skill coverage!</p>
+      {% endif %}
+    </div>
+
+    <!-- Recommended Certifications -->
+    <div class="glass-panel">
+      <div class="section-divider"><i class="bi bi-patch-check me-1"></i>Recommended Certifications</div>
+      {% if report.recommended_certs %}
+        {% for cert in report.recommended_certs %}
+        <div class="cert-card">
+          <i class="bi bi-award-fill text-warning fs-4 flex-shrink-0"></i>
+          <p class="mb-0 fw-semibold small">{{ cert }}</p>
+        </div>
+        {% endfor %}
+      {% else %}
+        <p class="text-white-50 small text-center">No specific certifications required.</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+const matched = {{ matched_count }};
+const missing = {{ missing_count }};
+const total = matched + missing;
+const matchPct = total > 0 ? Math.round(matched / total * 100) : 0;
+
+// Donut Chart
+new Chart(document.getElementById('donutChart'), {
+  type: 'doughnut',
+  data: {
+    labels: ['Matched Skills', 'Missing Skills'],
+    datasets: [{
+      data: [matched || 0, missing || 0],
+      backgroundColor: ['rgba(74,222,128,0.7)', 'rgba(248,113,113,0.6)'],
+      borderColor: ['#4ade80', '#f87171'],
+      borderWidth: 2,
+      hoverOffset: 8,
+    }]
+  },
+  options: {
+    cutout: '70%',
+    responsive: true,
+    plugins: {
+      legend: {
+        position: 'bottom',
+        labels: { color: 'rgba(255,255,255,0.6)', padding: 15, font: { size: 11 } }
+      },
+      tooltip: {
+        callbacks: {
+          label: ctx => ` ${ctx.label}: ${ctx.parsed} skills (${Math.round(ctx.parsed/total*100)}%)`
+        }
+      }
+    }
+  }
+});
+</script>
+{% endblock %}

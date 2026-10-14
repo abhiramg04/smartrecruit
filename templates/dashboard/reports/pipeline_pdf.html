@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Candidate Pipeline Report</title>
+    <style>
+        @page {
+            size: A4 landscape;
+            margin: 2cm;
+        }
+        body { font-family: Helvetica, sans-serif; font-size: 10px; color: #333; }
+        .header { border-bottom: 2px solid #2d8b7b; padding-bottom: 10px; margin-bottom: 20px; }
+        .header h1 { margin: 0; color: #2d8b7b; font-size: 20px; }
+        .header p { margin: 5px 0 0 0; color: #7f8c8d; font-size: 10px; }
+        .meta-box { background-color: #f8f9fa; border: 1px solid #e9ecef; padding: 10px; margin-bottom: 20px; }
+        .meta-table { width: 100%; border: none; }
+        .meta-table td { border: none; padding: 3px; }
+        .meta-label { font-weight: bold; color: #495057; width: 15%; }
+        .meta-value { color: #212529; }
+        table.data-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        table.data-table th, table.data-table td { border: 1px solid #dee2e6; padding: 6px 8px; text-align: left; }
+        table.data-table th { background-color: #e8f4f2; color: #2d8b7b; font-weight: bold; }
+        table.data-table tr:nth-child(even) { background-color: #fdfdfd; }
+        .badge { display: inline-block; padding: 2px 5px; font-size: 8px; font-weight: bold; border-radius: 3px; text-align: center; }
+        .badge-suitable { background-color: #d4edda; color: #155724; }
+        .badge-maybe { background-color: #fff3cd; color: #856404; }
+        .badge-reject { background-color: #f8d7da; color: #721c24; }
+        .badge-applied { background-color: #e2e3e5; color: #383d41; }
+        .badge-screening { background-color: #cce5ff; color: #004085; }
+        .badge-shortlisted { background-color: #d1ecf1; color: #0c5460; }
+        .badge-interview { background-color: #e8daef; color: #6c3483; }
+        .badge-offer { background-color: #d4efdf; color: #196f3d; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>SmartRecruit &mdash; Candidate Pipeline Report</h1>
+        <p>Generated on {{ generated_at|date:"F j, Y, g:i a" }} by {{ generated_by.email }}</p>
+    </div>
+
+    <div class="meta-box">
+        <table class="meta-table">
+            <tr>
+                <td class="meta-label">Job Filter:</td>
+                <td class="meta-value">{% if filters.job != 'All' %}{{ filters.job.title }} ({{ filters.job.company.name }}){% else %}All Jobs{% endif %}</td>
+                <td class="meta-label">Status Filter:</td>
+                <td class="meta-value">{{ filters.status }}</td>
+            </tr>
+            <tr>
+                <td class="meta-label">Date From:</td>
+                <td class="meta-value">{{ filters.date_from }}</td>
+                <td class="meta-label">Date To:</td>
+                <td class="meta-value">{{ filters.date_to }}</td>
+            </tr>
+        </table>
+    </div>
+
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th style="width: 20%;">Candidate</th>
+                <th style="width: 25%;">Job Title</th>
+                <th style="width: 15%;">Applied Date</th>
+                <th style="width: 15%;">Status</th>
+                <th style="width: 12%; text-align: center;">AI Score</th>
+                <th style="width: 13%; text-align: center;">AI Verdict</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for app in applications %}
+            <tr>
+                <td>
+                    <strong>{{ app.candidate.full_name|default:app.candidate.user.get_full_name }}</strong><br/>
+                    <span style="color:#7f8c8d; font-size:8px;">{{ app.candidate.user.email }}</span>
+                </td>
+                <td>{{ app.job.title }}</td>
+                <td>{{ app.created_at|date:"Y-m-d" }}</td>
+                <td>
+                    <span class="badge badge-applied">{{ app.get_status_display }}</span>
+                </td>
+                <td style="text-align: center;">
+                    {% if app.ranking_result %}
+                        {{ app.ranking_result.overall_score }}%
+                    {% else %}
+                        N/A
+                    {% endif %}
+                </td>
+                <td style="text-align: center;">
+                    {% if app.ranking_result %}
+                        {% if app.ranking_result.verdict == 'SUITABLE' %}
+                            <span class="badge badge-suitable">SUITABLE</span>
+                        {% elif app.ranking_result.verdict == 'MAYBE' %}
+                            <span class="badge badge-maybe">MAYBE</span>
+                        {% else %}
+                            <span class="badge badge-reject">REJECT</span>
+                        {% endif %}
+                    {% else %}
+                        <span class="badge badge-applied">PENDING</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6" style="text-align: center; color: #7f8c8d;">No applications found matching the selected filters.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

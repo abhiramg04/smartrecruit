@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+
+{% block title %}Interview Intelligence – SmartRecruit{% endblock %}
+
+{% block content %}
+<div class="page-header animate-fade-in mb-4">
+    <h1 class="fw-bold m-0" style="color:var(--cream);">
+        <i class="bi bi-mic-fill me-2"></i>Interview Intelligence Analysis
+    </h1>
+    <p class="mb-0" style="color:rgba(254,255,214,0.85);">
+        Upload audio or paste a transcript for 
+        <strong>{{ application.candidate.user.get_full_name }}</strong> →
+        <em>{{ application.job.title }}</em>
+    </p>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+            <div class="card-header bg-white border-bottom p-0">
+                <ul class="nav nav-tabs nav-fill border-0" id="transcriptTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active fw-bold py-3" id="audio-tab" data-bs-toggle="tab" data-bs-target="#audio-pane" type="button" role="tab" style="border:none; color:var(--dark);">
+                            <i class="bi bi-cloud-upload me-2"></i>Upload Audio (Groq STT)
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link fw-bold py-3" id="text-tab" data-bs-toggle="tab" data-bs-target="#text-pane" type="button" role="tab" style="border:none; color:var(--dark);">
+                            <i class="bi bi-file-text me-2"></i>Paste Transcript
+                        </button>
+                    </li>
+                </ul>
+            </div>
+            
+            <div class="card-body p-4 p-md-5">
+                <form method="post" action="{% url 'upload_transcript' application.pk %}" enctype="multipart/form-data" id="analysisForm">
+                    {% csrf_token %}
+                    
+                    <div class="tab-content" id="transcriptTabsContent">
+                        
+                        {# Audio Upload Pane #}
+                        <div class="tab-pane fade show active" id="audio-pane" role="tabpanel" tabindex="0">
+                            <div class="text-center p-5 border rounded-3 mb-4" style="border:2px dashed #dee2e6 !important; background:rgba(45,139,123,0.02);">
+                                <i class="bi bi-file-earmark-music display-4 text-muted mb-3"></i>
+                                <h5 class="fw-bold text-dark">Select Audio/Video File</h5>
+                                <p class="small text-muted mb-4">Supported: MP3, MP4, WAV, M4A, WEBM (Max 25MB)</p>
+                                <input type="file" name="audio_file" id="audio_file" class="form-control" accept="audio/*,video/mp4,video/webm">
+                            </div>
+                            <div class="alert alert-info border-0 rounded-3 small">
+                                <i class="bi bi-info-circle-fill me-2"></i>
+                                The file will be transcribed securely using Groq Whisper, followed by an intelligence analysis.
+                            </div>
+                        </div>
+
+                        {# Text Paste Pane #}
+                        <div class="tab-pane fade" id="text-pane" role="tabpanel" tabindex="0">
+                            <div class="mb-4">
+                                <label class="form-label fw-bold text-dark">Raw Interview Transcript</label>
+                                <textarea name="transcript" class="form-control border-0 rounded-3 shadow-sm bg-light" rows="12" placeholder="Speaker 1: Welcome to the interview...&#10;Speaker 2: Thank you, I'm glad to be here..."></textarea>
+                                <div class="form-text mt-2"><i class="bi bi-shield-check me-1"></i>Transcript is sent securely to Groq for analysis.</div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <hr class="my-4">
+                    <button type="submit" class="btn btn-primary-custom w-100 py-3 fw-bold fs-5 shadow-teal" id="analyzeBtn" onclick="showLoading()">
+                        <i class="bi bi-cpu me-2"></i>Run Intelligence Analysis
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .nav-tabs .nav-link.active {
+        border-bottom: 3px solid var(--teal) !important;
+        color: var(--teal) !important;
+        background: rgba(45,139,123,0.04);
+    }
+</style>
+
+<script>
+    function showLoading() {
+        const btn = document.getElementById('analyzeBtn');
+        const hasAudio = document.getElementById('audio_file').files.length > 0;
+        const textStr = hasAudio ? 'Transcribing & Analyzing...' : 'Analyzing Transcript...';
+        
+        btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>${textStr}`;
+        btn.classList.add('disabled');
+        // Let form submit naturally
+    }
+</script>
+{% endblock %}

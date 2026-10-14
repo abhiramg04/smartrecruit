@@ -1,0 +1,136 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Recruiters – SmartRecruit Admin{% endblock %}
+
+{% block content %}
+<div class="animate-fade-in">
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4">
+        <div>
+            <h1 class="mb-1" style="font-size:1.6rem;"><i class="bi bi-building me-2 text-teal"></i>Manage Recruiters</h1>
+            <p class="mb-0 text-muted" style="font-size:0.9rem;">
+                Review recruiter profiles, company associations, and account status
+            </p>
+        </div>
+        <a href="{% url 'admin_dashboard' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i> Back to Dashboard
+        </a>
+    </div>
+
+    <!-- Search & Filter -->
+    <div class="glass-panel p-3 mb-4">
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-md-9">
+                <label class="form-label" style="font-size:0.85rem;">Search Recruiters</label>
+                <input type="text" name="search" class="form-control" placeholder="Search by name, email, or username..." value="{{ search_query }}">
+            </div>
+            <div class="col-md-3">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-search me-1"></i> Search
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Messages -->
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Recruiters Table -->
+    <div class="glass-panel p-0 overflow-hidden">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0" style="font-size:0.9rem;">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-4">Recruiter Name</th>
+                        <th>Email / Contact</th>
+                        <th>Company Info</th>
+                        <th>Designation</th>
+                        <th>Status</th>
+                        <th class="text-end pe-4">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for r in recruiters %}
+                    <tr>
+                        <td class="ps-4">
+                            <div class="fw-bold text-teal">{{ r.get_full_name|default:r.username }}</div>
+                            <div class="text-muted small">@{{ r.username }}</div>
+                        </td>
+                        <td>
+                            <div>{{ r.email }}</div>
+                            {% if r.phone %}<div class="text-muted small"><i class="bi bi-telephone me-1"></i>{{ r.phone }}</div>{% endif %}
+                        </td>
+                        <td>
+                            {% if r.company %}
+                                <div class="fw-semibold">{{ r.company.name }}</div>
+                                {% if r.company.is_approved %}
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle">Company Approved</span>
+                                {% else %}
+                                    <span class="badge bg-warning-subtle text-warning border border-warning-subtle">Pending Approval</span>
+                                {% endif %}
+                            {% else %}
+                                <span class="text-muted">No Company Linked</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ r.designation|default:"Recruiter" }}</td>
+                        <td>
+                            {% if r.is_active %}
+                                <span class="badge bg-success">Active</span>
+                            {% else %}
+                                <span class="badge bg-warning text-dark">Suspended</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end pe-4">
+                            <form method="post" action="{% url 'admin_user_action' r.id %}" class="d-inline" onsubmit="return confirm('Confirm recruiter status update?');">
+                                {% csrf_token %}
+                                {% if r.is_active %}
+                                    <button type="submit" name="action" value="suspend" class="btn btn-sm btn-outline-warning" title="Suspend Recruiter">
+                                        <i class="bi bi-pause-circle me-1"></i> Suspend
+                                    </button>
+                                {% else %}
+                                    <button type="submit" name="action" value="activate" class="btn btn-sm btn-outline-success" title="Activate Recruiter">
+                                        <i class="bi bi-play-circle me-1"></i> Activate
+                                    </button>
+                                {% endif %}
+                                <button type="submit" name="action" value="delete" class="btn btn-sm btn-outline-danger ms-1" title="Delete Recruiter">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-4 text-muted">
+                            No recruiters found.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if is_paginated %}
+        <div class="p-3 border-top bg-light d-flex justify-content-between align-items-center">
+            <span class="text-muted" style="font-size:0.85rem;">
+                Showing {{ page_obj.start_index }} - {{ page_obj.end_index }} of {{ paginator.count }}
+            </span>
+            <ul class="pagination pagination-sm mb-0">
+                {% if page_obj.has_previous %}
+                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}&search={{ search_query }}">Previous</a></li>
+                {% endif %}
+                <li class="page-item active"><span class="page-link">{{ page_obj.number }}</span></li>
+                {% if page_obj.has_next %}
+                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}&search={{ search_query }}">Next</a></li>
+                {% endif %}
+            </ul>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

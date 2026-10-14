@@ -1,0 +1,174 @@
+{% extends 'base.html' %}
+
+{% block title %}Skill Gap Analyzer - SmartRecruit{% endblock %}
+
+{% block extra_css %}
+<style>
+  .job-select-card {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 14px;
+    padding: 1.1rem 1.4rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+  }
+  .job-select-card:hover { border-color: rgba(99,102,241,0.5); background: rgba(99,102,241,0.07); }
+  .job-select-card input[type="radio"] { position: absolute; opacity: 0; }
+  .job-select-card.selected {
+    border-color: #6366f1;
+    background: rgba(99,102,241,0.12);
+    box-shadow: 0 0 0 2px rgba(99,102,241,0.25);
+  }
+  .job-select-card .check-mark {
+    width: 22px; height: 22px; border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.2);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; transition: all 0.2s;
+  }
+  .job-select-card.selected .check-mark {
+    background: #6366f1; border-color: #6366f1;
+  }
+  .report-history-item {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0.8rem 0; border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+  .report-history-item:last-child { border-bottom: none; }
+  .match-pill {
+    padding: 3px 12px; border-radius: 99px; font-size: 0.78rem; font-weight: 700;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-9">
+
+    <!-- Header -->
+    <div class="text-center mb-5">
+      <h1 class="fw-bold display-5 mb-2">Skill Gap Analyzer</h1>
+      <p class="text-white-50">Select a target job to discover your skill gaps and get an AI-powered learning path.</p>
+    </div>
+
+    {% if messages %}
+      {% for msg in messages %}
+        <div class="alert alert-{% if msg.tags == 'error' %}danger{% else %}{{ msg.tags }}{% endif %} mb-4">{{ msg }}</div>
+      {% endfor %}
+    {% endif %}
+
+    {% if not has_profile %}
+    <div class="glass-panel text-center py-4 mb-4" style="border-color: rgba(251,191,36,0.4);">
+      <i class="bi bi-exclamation-triangle-fill text-warning fs-2 mb-2 d-block"></i>
+      <p class="mb-2 fw-semibold">Your resume hasn't been parsed yet.</p>
+      <a href="{% url 'resume_upload' %}" class="btn btn-warning btn-sm fw-bold">Upload Resume First</a>
+    </div>
+    {% endif %}
+
+    <div class="row g-4">
+      <!-- Job Selector Form -->
+      <div class="col-lg-8">
+        <div class="glass-panel">
+          <h5 class="fw-bold mb-4"><i class="bi bi-crosshair me-2 text-primary"></i>Select Target Job</h5>
+
+          <form action="{% url 'skill_gap_analyze' %}" method="post" id="gap-form">
+            {% csrf_token %}
+
+            {% if jobs %}
+              <div class="d-flex flex-column gap-2 mb-4" style="max-height: 420px; overflow-y: auto;">
+                {% for job in jobs %}
+                <label class="job-select-card d-flex align-items-center gap-3" id="label-{{ job.id }}">
+                  <input type="radio" name="job_id" value="{{ job.id }}" onchange="selectJob({{ job.id }})">
+                  <div class="check-mark" id="check-{{ job.id }}">
+                    <i class="bi bi-check-lg text-white" style="font-size:0.75rem; display:none;" id="icon-{{ job.id }}"></i>
+                  </div>
+                  <div class="flex-grow-1">
+                    <p class="fw-semibold mb-0">{{ job.title }}</p>
+                    <p class="text-white-50 small mb-0">{{ job.company.name }} · {{ job.get_work_model_display }}</p>
+                  </div>
+                  <span class="badge bg-secondary bg-opacity-50">{{ job.skills.count }} skills</span>
+                </label>
+                {% endfor %}
+              </div>
+            {% else %}
+              <div class="text-center py-4 text-white-50">
+                <i class="bi bi-briefcase fs-2 mb-2 d-block"></i>
+                <p>No published jobs available yet.</p>
+              </div>
+            {% endif %}
+
+            <button type="submit" id="analyze-btn" class="btn btn-primary-custom w-100 py-3 fw-bold" disabled {% if not has_profile %}title="Upload resume first"{% endif %}>
+              <i class="bi bi-cpu me-2"></i> Analyze Skill Gap
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Previous Reports Sidebar -->
+      <div class="col-lg-4">
+        <div class="glass-panel">
+          <h5 class="fw-bold mb-4"><i class="bi bi-clock-history me-2 text-warning"></i>Recent Reports</h5>
+
+          {% if existing_reports %}
+            {% for rep in existing_reports %}
+            <div class="report-history-item">
+              <div>
+                <p class="fw-semibold small mb-0">{{ rep.job.title }}</p>
+                <p class="text-white-50" style="font-size:0.72rem;">{{ rep.generated_at|timesince }} ago</p>
+              </div>
+              <div class="d-flex align-items-center gap-2">
+                <span class="match-pill {% if rep.match_percentage >= 70 %}bg-success bg-opacity-20 text-success{% elif rep.match_percentage >= 45 %}bg-warning bg-opacity-20 text-warning{% else %}bg-danger bg-opacity-20 text-danger{% endif %}">
+                  {{ rep.match_percentage|floatformat:0 }}%
+                </span>
+                <a href="{% url 'skill_gap_report' rep.pk %}" class="btn btn-sm btn-outline-light py-0 px-2">
+                  <i class="bi bi-eye"></i>
+                </a>
+              </div>
+            </div>
+            {% endfor %}
+          {% else %}
+            <div class="text-center py-3 text-white-50">
+              <i class="bi bi-bar-chart fs-2 mb-2 d-block opacity-50"></i>
+              <p class="small mb-0">No reports yet</p>
+            </div>
+          {% endif %}
+        </div>
+
+        <!-- How it works -->
+        <div class="glass-panel mt-3">
+          <h6 class="fw-bold mb-3 text-white-50">How It Works</h6>
+          <div class="d-flex flex-column gap-3 small">
+            <div class="d-flex gap-2"><span class="text-primary fw-bold">1.</span><span>Select a target job role</span></div>
+            <div class="d-flex gap-2"><span class="text-primary fw-bold">2.</span><span>AI compares your resume skills vs job requirements</span></div>
+            <div class="d-flex gap-2"><span class="text-primary fw-bold">3.</span><span>Get a personalized learning roadmap</span></div>
+            <div class="d-flex gap-2"><span class="text-primary fw-bold">4.</span><span>Export your plan as PDF</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let selectedJob = null;
+
+function selectJob(jobId) {
+  // Reset all
+  document.querySelectorAll('.job-select-card').forEach(el => {
+    el.classList.remove('selected');
+  });
+  document.querySelectorAll('[id^="check-"]').forEach(el => {
+    el.style.background = '';
+    el.style.borderColor = '';
+  });
+  document.querySelectorAll('[id^="icon-"]').forEach(el => el.style.display = 'none');
+
+  // Activate selected
+  document.getElementById('label-' + jobId).classList.add('selected');
+  document.getElementById('icon-' + jobId).style.display = 'inline';
+  selectedJob = jobId;
+  document.getElementById('analyze-btn').disabled = {% if has_profile %}false{% else %}true{% endif %};
+}
+</script>
+{% endblock %}

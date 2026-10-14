@@ -1,0 +1,196 @@
+{% extends 'base.html' %}
+
+{% block title %}System Audit Logs – SmartRecruit Admin{% endblock %}
+
+{% block content %}
+<style>
+    .glass-card {
+        background: rgba(128, 128, 128, 0.03);
+        border: 1px solid rgba(128, 128, 128, 0.15);
+        border-radius: 1rem;
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        padding: 1.5rem;
+    }
+    .form-control, .form-select {
+        background-color: rgba(128, 128, 128, 0.05);
+        border: 1px solid rgba(128, 128, 128, 0.2);
+        color: var(--text-primary);
+        border-radius: 0.5rem;
+    }
+    .form-control:focus, .form-select:focus {
+        background-color: rgba(128, 128, 128, 0.08);
+        border-color: var(--accent);
+        box-shadow: 0 0 0 0.25rem rgba(var(--accent-rgb), 0.25);
+        color: var(--text-primary);
+    }
+    .table {
+        color: var(--text-primary);
+    }
+    .table th {
+        border-bottom: 2px solid rgba(128, 128, 128, 0.2);
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        letter-spacing: 0.5px;
+        color: var(--text-secondary);
+    }
+    .table td {
+        border-bottom: 1px solid rgba(128, 128, 128, 0.1);
+        vertical-align: middle;
+        font-size: 0.95rem;
+    }
+    .badge-action {
+        background: rgba(var(--accent-rgb), 0.15);
+        color: var(--accent);
+        border: 1px solid rgba(var(--accent-rgb), 0.3);
+        font-size: 0.75rem;
+        letter-spacing: 0.5px;
+    }
+    .badge-action.LOGIN, .badge-action.LOGOUT {
+        background: rgba(40, 167, 69, 0.15);
+        color: #28a745;
+        border-color: rgba(40, 167, 69, 0.3);
+    }
+    .badge-action.LOGIN_FAILED {
+        background: rgba(220, 53, 69, 0.15);
+        color: #dc3545;
+        border-color: rgba(220, 53, 69, 0.3);
+    }
+    .empty-state {
+        padding: 3rem 1rem;
+        text-align: center;
+        color: var(--text-secondary);
+    }
+    .empty-state i {
+        font-size: 3rem;
+        opacity: 0.5;
+        margin-bottom: 1rem;
+    }
+</style>
+
+<div class="animate-fade-in">
+
+    <div class="page-header mb-4">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+            <div>
+                <h1 class="mb-1 fw-bold" style="font-size:1.75rem; letter-spacing: -0.5px;">
+                    <i class="bi bi-shield-lock text-accent me-2"></i> System Audit Logs
+                </h1>
+                <p class="mb-0 text-secondary" style="font-size:0.95rem;">
+                    Track user activity and system events for security and compliance.
+                </p>
+            </div>
+            <div>
+                <a href="{% url 'admin_dashboard' %}" class="btn btn-outline-secondary d-flex align-items-center gap-2" style="border-radius: 0.5rem;">
+                    <i class="bi bi-arrow-left"></i> Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="glass-card mb-4">
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-md-5">
+                <label for="search" class="form-label small text-uppercase fw-bold text-secondary">Search Logs</label>
+                <input type="text" class="form-control" id="search" name="search" value="{{ search_query }}" placeholder="Search by email, action, IP, or description...">
+            </div>
+            <div class="col-md-4">
+                <label for="action" class="form-label small text-uppercase fw-bold text-secondary">Action Type</label>
+                <select class="form-select" id="action" name="action">
+                    <option value="">All Actions</option>
+                    {% for act in actions %}
+                    <option value="{{ act }}" {% if act == current_action %}selected{% endif %}>{{ act }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <button type="submit" class="btn btn-primary w-100 d-flex align-items-center justify-content-center gap-2">
+                    <i class="bi bi-filter"></i> Apply Filters
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Logs Table -->
+    <div class="glass-card">
+        {% if logs %}
+            <div class="table-responsive">
+                <table class="table table-borderless table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th style="width: 15%;">Timestamp</th>
+                            <th style="width: 20%;">User</th>
+                            <th style="width: 15%;">Action</th>
+                            <th style="width: 35%;">Description</th>
+                            <th style="width: 15%;">IP Address</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in logs %}
+                        <tr>
+                            <td>
+                                <div class="text-secondary small">{{ log.timestamp|date:"Y-m-d" }}</div>
+                                <div class="fw-medium">{{ log.timestamp|time:"H:i:s" }}</div>
+                            </td>
+                            <td>
+                                {% if log.user %}
+                                    <div class="fw-bold">{{ log.user.get_full_name|default:log.user.email }}</div>
+                                    <div class="text-secondary small">{{ log.user.get_role_display }}</div>
+                                {% else %}
+                                    <span class="text-secondary fst-italic">System / Unknown</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge rounded-pill badge-action {{ log.action }}">{{ log.action }}</span>
+                            </td>
+                            <td>
+                                <span class="text-secondary">{{ log.description }}</span>
+                            </td>
+                            <td>
+                                <span class="text-secondary font-monospace small">{{ log.ip_address|default:"N/A" }}</span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Pagination -->
+            {% if is_paginated %}
+            <div class="d-flex justify-content-center mt-4">
+                <nav>
+                    <ul class="pagination pagination-sm">
+                        {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if current_action %}&action={{ current_action }}{% endif %}">Previous</a>
+                        </li>
+                        {% endif %}
+                        
+                        <li class="page-item active"><span class="page-link">{{ page_obj.number }} of {{ paginator.num_pages }}</span></li>
+                        
+                        {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if current_action %}&action={{ current_action }}{% endif %}">Next</a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+            {% endif %}
+
+        {% else %}
+            <div class="empty-state">
+                <i class="bi bi-inbox"></i>
+                <h5>No logs found</h5>
+                <p>We couldn't find any audit logs matching your criteria.</p>
+                {% if search_query or current_action %}
+                <a href="{% url 'admin_audit_logs' %}" class="btn btn-outline-secondary btn-sm mt-2">Clear Filters</a>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+
+</div>
+{% endblock %}

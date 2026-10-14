@@ -1,0 +1,149 @@
+{% extends 'base.html' %}
+
+{% block title %}My Profile - SmartRecruit{% endblock %}
+
+{% block content %}
+<div class="glass-panel animate-fade-in mx-auto" style="max-width: 800px;">
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <h2 class="fw-bold m-0 text-teal">My Profile</h2>
+    </div>
+    
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show" role="alert">
+                {{ message }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="row g-4 mt-2">
+        <!-- Left Sidebar: Avatar & Info -->
+        <div class="col-md-4 text-center">
+            <div class="p-4 rounded-lg" style="background: var(--bg-section); border: 1px solid var(--border);">
+                <div class="mb-3 position-relative d-inline-block">
+                    {% if user.profile_photo %}
+                        <img src="{{ user.profile_photo.url }}" class="rounded-circle img-fluid shadow-sm" 
+                             style="width: 140px; height: 140px; object-fit: cover; border: 4px solid var(--mint-light);">
+                    {% else %}
+                        <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto shadow-sm fw-bold" 
+                             style="width: 140px; height: 140px; font-size: 3.5rem; background: linear-gradient(135deg, var(--deep-teal), var(--teal)); color: var(--cream); border: 4px solid var(--mint-light);">
+                            {{ user.username|make_list|first|upper }}
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <h4 class="fw-bold text-primary mb-1">{{ user.get_full_name|default:user.username }}</h4>
+                <div class="text-muted small mb-2">{{ user.email }}</div>
+                <span class="badge badge-teal px-3 py-2 mb-4">{{ user.get_role_display }}</span>
+                
+                <div class="d-grid gap-2">
+                    <a href="{% url 'password_change' %}" class="btn btn-outline-primary btn-sm rounded-pill fw-600">
+                        <i class="bi bi-key me-1"></i> Change Password
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Right Column: Form -->
+        <div class="col-md-8">
+            <div class="p-4 rounded-lg" style="background: var(--bg-card); border: 1px solid var(--border);">
+                <h5 class="fw-bold mb-4 text-secondary border-bottom pb-2 border-teal">Update Information</h5>
+                
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label text-teal fw-600">First Name</label>
+                            <input type="text" name="first_name" class="form-control" value="{{ form.first_name.value|default:'' }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-teal fw-600">Last Name</label>
+                            <input type="text" name="last_name" class="form-control" value="{{ form.last_name.value|default:'' }}">
+                        </div>
+                        
+                        <div class="col-12">
+                            <label class="form-label text-teal fw-600">Email Address</label>
+                            <div class="input-icon-wrapper">
+                                <i class="bi bi-envelope"></i>
+                                <input type="email" name="email" class="form-control ps-5" value="{{ form.email.value|default:'' }}">
+                            </div>
+                            {% if form.email.errors %}
+                                <div class="text-danger small mt-1">{{ form.email.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-12">
+                            <label class="form-label text-teal fw-600">Bio</label>
+                            <textarea name="bio" class="form-control" rows="4" placeholder="Tell us about yourself...">{{ form.bio.value|default:'' }}</textarea>
+                        </div>
+                        
+                        <div class="col-12">
+                            <label class="form-label text-teal fw-600">Profile Photo <span class="text-muted fw-normal small">(Optional)</span></label>
+                            <input type="file" name="profile_photo" class="form-control" accept="image/*">
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-end mt-4 pt-3 border-top border-teal">
+                        <button type="submit" class="btn btn-primary-custom px-4 fw-bold rounded-pill">
+                            <i class="bi bi-save me-1"></i> Save Changes
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {% if user.role == 'CANDIDATE' %}
+    <!-- Resume Section -->
+    <div class="mt-4">
+        <div class="p-4 rounded-lg" style="background: var(--bg-card); border: 1px solid var(--border);">
+            <div class="d-flex align-items-center justify-content-between mb-3">
+                <h5 class="fw-bold m-0 text-secondary">
+                    <i class="bi bi-file-earmark-person text-teal me-2"></i>Resume
+                </h5>
+                <a href="{% url 'resume_upload' %}" class="btn btn-primary-custom btn-sm fw-bold rounded-pill shadow-teal">
+                    <i class="bi bi-cloud-upload me-1"></i>
+                    {% if user.candidate_profile.resume_file %}Update Resume{% else %}Upload Resume{% endif %}
+                </a>
+            </div>
+
+            {% if user.candidate_profile.resume_file %}
+                <div class="d-flex align-items-center gap-3 p-3 rounded-lg" 
+                     style="background: var(--bg-section); border: 1px solid var(--mint-light);">
+                    <div class="d-flex align-items-center justify-content-center rounded-circle"
+                         style="width:46px;height:46px;background:var(--mint-light);color:var(--teal);flex-shrink:0;">
+                        <i class="bi bi-file-earmark-pdf fs-5"></i>
+                    </div>
+                    <div class="flex-grow-1 overflow-hidden">
+                        <div class="fw-600 text-dark text-truncate" style="max-width:300px;">
+                            {{ user.candidate_profile.resume_file.name|slice:"8:" }}
+                        </div>
+                        <div class="text-muted small">
+                            {% if user.candidate_profile.is_parsed %}
+                                <i class="bi bi-check-circle-fill text-success me-1"></i>Parsed &amp; Ready
+                            {% else %}
+                                <i class="bi bi-exclamation-circle-fill text-warning me-1"></i>Not yet parsed
+                            {% endif %}
+                        </div>
+                    </div>
+                    <a href="{{ user.candidate_profile.resume_file.url }}" target="_blank"
+                       class="btn btn-sm btn-outline-teal fw-600 rounded-pill flex-shrink-0">
+                        <i class="bi bi-eye me-1"></i>View
+                    </a>
+                </div>
+            {% else %}
+                <div class="text-center py-4" style="border: 2px dashed var(--mint); border-radius: 12px; background: var(--bg-section);">
+                    <i class="bi bi-cloud-upload-fill fs-2 text-teal mb-2 d-block"></i>
+                    <p class="text-muted small mb-2">No resume uploaded yet.</p>
+                    <a href="{% url 'resume_upload' %}" class="btn btn-primary-custom btn-sm fw-bold rounded-pill shadow-teal">
+                        Upload Now
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

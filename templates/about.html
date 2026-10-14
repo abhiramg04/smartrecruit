@@ -1,0 +1,379 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}About Us - SmartRecruit AI{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Gradient Background Hero */
+    .about-hero {
+        background: linear-gradient(180deg, var(--mint-light) 0%, transparent 100%);
+        margin-top: -2rem;
+        padding: 5rem 0 3rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    /* Floating bubble decoration */
+    .bubble-deco {
+        position: absolute;
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        background: rgba(143, 223, 212, 0.2);
+        filter: blur(20px);
+        animation: float-bubble 8s ease-in-out infinite alternate;
+    }
+
+    @keyframes float-bubble {
+        0% { transform: translateY(0) scale(1); }
+        100% { transform: translateY(-30px) scale(1.1); }
+    }
+
+    /* Core Values styling */
+    .value-card {
+        background: var(--glass-bg);
+        border: 1px solid var(--glass-border);
+        border-radius: 20px !important;
+        box-shadow: var(--glass-shadow);
+        backdrop-filter: blur(12px);
+        transition: var(--transition);
+        overflow: hidden;
+    }
+
+    .value-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 30px rgba(45, 139, 123, 0.15);
+        border-color: var(--teal);
+    }
+
+    .value-icon-circle {
+        width: 50px;
+        height: 50px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--mint-light);
+        color: var(--deep-teal);
+        font-size: 1.3rem;
+    }
+
+    .value-card:hover .value-icon-circle {
+        background: var(--deep-teal);
+        color: white;
+    }
+
+    /* Stepper / Timeline Workflow */
+    .step-indicator-wrapper {
+        border-right: 1px solid var(--border);
+    }
+
+    .step-pill {
+        cursor: pointer;
+        padding: 1rem 1.5rem;
+        border-radius: var(--radius-md);
+        border: 1px solid transparent;
+        transition: var(--transition);
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 0.8rem;
+    }
+
+    .step-pill:hover {
+        background: rgba(91, 174, 160, 0.08);
+        transform: translateX(4px);
+    }
+
+    .step-pill.active {
+        background: var(--glass-bg);
+        border-color: var(--glass-border);
+        box-shadow: var(--glass-shadow);
+        color: var(--deep-teal);
+        transform: translateX(8px);
+    }
+
+    .step-num {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: rgba(91, 174, 160, 0.15);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 0.9rem;
+        color: var(--deep-teal);
+        flex-shrink: 0;
+    }
+
+    .step-pill.active .step-num {
+        background: var(--deep-teal);
+        color: white;
+    }
+
+    /* Terminal Console window simulation */
+    .console-window {
+        background: #0f172a;
+        border-radius: var(--radius-lg);
+        box-shadow: 0 15px 35px rgba(15, 23, 42, 0.25);
+        color: #f8fafc;
+        overflow: hidden;
+        border: 1px solid #1e293b;
+    }
+
+    .console-header {
+        background: #1e293b;
+        padding: 0.75rem 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .console-dots {
+        display: flex;
+        gap: 6px;
+    }
+
+    .console-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+    }
+
+    .console-body {
+        padding: 1.5rem;
+        font-family: 'Courier New', Courier, monospace;
+        font-size: 0.88rem;
+        min-height: 220px;
+    }
+
+    .text-code-comment { color: #64748b; }
+    .text-code-key { color: #38bdf8; }
+    .text-code-string { color: #4ade80; }
+    .text-code-number { color: #fb7185; }
+
+    /* Animated Stats counters */
+    .stat-number {
+        font-size: 3rem;
+        font-weight: 800;
+        letter-spacing: -0.03em;
+        line-height: 1;
+    }
+
+    @keyframes pulse {
+        0% { transform: scale(1); opacity: 0.4; }
+        50% { transform: scale(1.06); opacity: 0.7; }
+        100% { transform: scale(1); opacity: 0.4; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="about-hero text-center animate-fade-in">
+    <div class="bubble-deco" style="top: 10%; left: 8%;"></div>
+    <div class="bubble-deco" style="bottom: 20%; right: 10%;"></div>
+    
+    <div class="container py-4 position-relative z-1">
+        <h1 class="display-4 fw-bold text-deep-teal mb-3">Re-engineering Recruitment<br> With <span class="text-teal">Smart AI Architectures</span></h1>
+        <p class="lead text-muted max-w-md mx-auto" style="max-width: 650px; font-weight: 500; font-size: 1.15rem; line-height: 1.7;">
+            We believe hiring should be purely objective, efficient, and transparent. SmartRecruit bridges the gap between top-tier talent and growing organizations through generative pipeline pipelines.
+        </p>
+    </div>
+</div>
+
+<!-- Mission Section -->
+<div class="container py-5 animate-fade-in">
+    <div class="row align-items-center g-5">
+        <div class="col-lg-6">
+            <div class="position-relative">
+                <div class="rounded-5 overflow-hidden shadow-lg position-relative" style="background: var(--bg-card); border: 2px solid var(--teal); height: 400px; display: flex; align-items: center; justify-content: center;">
+                    <div class="position-absolute" style="width: 200%; height: 200%; background: radial-gradient(circle, var(--mint-light) 0%, transparent 70%); animation: pulse 5s infinite;"></div>
+                    
+                    <div class="z-1 text-center">
+                        <i class="bi bi-robot text-teal display-1 mb-3 d-block"></i>
+                        <h3 class="fw-bold text-deep-teal">100% Skill-Driven</h3>
+                        <p class="text-muted small px-5">Evaluating actual engineering skills and logical competence, bypassing resume noise.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-6">
+            <div class="badge badge-cream text-teal border-mint mb-3 fw-bold px-3 py-2"><i class="bi bi-bullseye me-2"></i>Our Mission</div>
+            <h2 class="fw-bold text-deep-teal mb-4">Empowering talent and organizations through intelligence.</h2>
+            <p class="text-muted mb-4" style="line-height: 1.8;">
+                The legacy hiring stack is fragmented and slow. Recruiting processes rely on keywords, leading to resume screening dropoffs and candidate fatigue.
+            </p>
+            <p class="text-muted mb-4" style="line-height: 1.8;">
+                SmartRecruit resolves this by compiling raw profiles into structured datasets, comparing skills directly against descriptions with contextual LLM evaluations, and verifying capabilities via isolated programming sandbox sandboxes.
+            </p>
+            
+            <div class="d-flex gap-5 mt-5">
+                <div>
+                    <h2 class="text-teal fw-bold stat-number mb-0">98%</h2>
+                    <p class="text-muted small fw-600">Matching Quality Ratio</p>
+                </div>
+                <div style="width: 2px; background: var(--border); height: 60px;"></div>
+                <div>
+                    <h2 class="text-teal fw-bold stat-number mb-0">10x</h2>
+                    <p class="text-muted small fw-600">Recruiter Screening Speed</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Stepper Timeline Section -->
+<div class="container py-5 my-5 border-top border-mint">
+    <div class="text-center mb-5">
+        <h2 class="fw-bold text-deep-teal">How SmartRecruit Works</h2>
+        <p class="text-muted">Interactive walk-through of our candidate pipeline pipeline.</p>
+    </div>
+    
+    <div class="row g-4 align-items-center">
+        <!-- Interactive Steps Left -->
+        <div class="col-lg-5 step-indicator-wrapper">
+            <div class="step-pill active" onclick="activateStep(0)">
+                <div class="step-num">1</div>
+                <div>
+                    <div class="fw-bold">Dynamic OCR & Parsing</div>
+                    <small class="text-muted">Converting files to raw content streams.</small>
+                </div>
+            </div>
+            <div class="step-pill" onclick="activateStep(1)">
+                <div class="step-num">2</div>
+                <div>
+                    <div class="fw-bold">spaCy Tag Extraction</div>
+                    <small class="text-muted">Structuring contact data and keyword lists.</small>
+                </div>
+            </div>
+            <div class="step-pill" onclick="activateStep(2)">
+                <div class="step-num">3</div>
+                <div>
+                    <div class="fw-bold">LLM Gap Analysis</div>
+                    <small class="text-muted">Matching resume structures against jobs.</small>
+                </div>
+            </div>
+            <div class="step-pill" onclick="activateStep(3)">
+                <div class="step-num">4</div>
+                <div>
+                    <div class="fw-bold">Isolated Assessments</div>
+                    <small class="text-muted">Evaluating coding submissions live.</small>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Live Console Display Right -->
+        <div class="col-lg-7">
+            <div class="console-window">
+                <div class="console-header">
+                    <div class="console-dots">
+                        <span class="console-dot" style="background: #ef4444;"></span>
+                        <span class="console-dot" style="background: #f59e0b;"></span>
+                        <span class="console-dot" style="background: #10b981;"></span>
+                    </div>
+                    <span class="small text-muted font-monospace" style="font-size: 0.75rem;">engine.py --active</span>
+                </div>
+                <div class="console-body" id="console-output">
+                    <!-- Dynamic code injected here -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Technology Stack -->
+<div class="container py-5 my-5 border-top border-mint">
+    <div class="text-center mb-5">
+        <h2 class="fw-bold text-deep-teal">Modern Technology Stack</h2>
+        <p class="text-muted">Built with production-grade components for secure and responsive performance.</p>
+    </div>
+    
+    <div class="row g-4 justify-content-center">
+        <!-- Django -->
+        <div class="col-md-3 col-6 text-center">
+            <div class="card value-card border-0 h-100 p-4">
+                <div class="value-icon-circle mx-auto mb-3">
+                    <i class="bi bi-braces"></i>
+                </div>
+                <h5 class="fw-bold text-dark">Django 5</h5>
+                <p class="text-muted small mb-0">Robust model architectures and schema integrity views.</p>
+            </div>
+        </div>
+        <!-- LLM API -->
+        <div class="col-md-3 col-6 text-center">
+            <div class="card value-card border-0 h-100 p-4">
+                <div class="value-icon-circle mx-auto mb-3">
+                    <i class="bi bi-cpu"></i>
+                </div>
+                <h5 class="fw-bold text-dark">LLM Processing</h5>
+                <p class="text-muted small mb-0">Structured prompt logic calling high-speed Llama models.</p>
+            </div>
+        </div>
+        <!-- Sanbox -->
+        <div class="col-md-3 col-6 text-center">
+            <div class="card value-card border-0 h-100 p-4">
+                <div class="value-icon-circle mx-auto mb-3">
+                    <i class="bi bi-shield-check"></i>
+                </div>
+                <h5 class="fw-bold text-dark">Sandboxing</h5>
+                <p class="text-muted small mb-0">Dockerized runners evaluating candidate scripts safely.</p>
+            </div>
+        </div>
+        <!-- Analytics -->
+        <div class="col-md-3 col-6 text-center">
+            <div class="card value-card border-0 h-100 p-4">
+                <div class="value-icon-circle mx-auto mb-3">
+                    <i class="bi bi-graph-up-arrow"></i>
+                </div>
+                <h5 class="fw-bold text-dark">Smart Analytics</h5>
+                <p class="text-muted small mb-0">Chart.js visualizations plotting funnel statistics.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const stepData = [
+        {
+            title: "Dynamic OCR & Parsing",
+            content: `<span class="text-code-comment">// Step 1: Ingest resume and route via extension</span>\n<span class="text-code-key">import</span> fitz <span class="text-code-comment"># PyMuPDF</span>\n\n<span class="text-code-key">def</span> <span class="text-code-string">extract_text</span>(file_path, ext):\n    <span class="text-code-key">if</span> ext == <span class="text-code-string">'pdf'</span>:\n        doc = fitz.open(file_path)\n        text = <span class="text-code-string">"\\n"</span>.join([page.get_text() <span class="text-code-key">for</span> page <span class="text-code-key">in</span> doc])\n        <span class="text-code-key">return</span> text.strip()\n\n<span class="text-code-comment">// Output: Loaded text stream successfully.</span>`
+        },
+        {
+            title: "spaCy Tag Extraction",
+            content: `<span class="text-code-comment">// Step 2: Use spaCy en_core_web_sm for NER</span>\n<span class="text-code-key">import</span> spacy\n\nnlp = spacy.load(<span class="text-code-string">"en_core_web_sm"</span>)\ndoc = nlp(raw_text[:<span class="text-code-number">500</span>])\n\n<span class="text-code-key">for</span> ent <span class="text-code-key">in</span> doc.ents:\n    <span class="text-code-key">if</span> ent.label_ == <span class="text-code-string">"PERSON"</span>:\n        candidate_name = ent.text\n        <span class="text-code-comment"># Extracted: { "name": "${'{{ profile.full_name|default:"Jane Doe" }}'}" }</span>`
+        },
+        {
+            title: "LLM Gap Analysis",
+            content: `<span class="text-code-comment">// Step 3: Package prompts to LLM Schema endpoints</span>\n<span class="text-code-key">class</span> <span class="text-code-string">SkillGapAnalysisSchema</span>(BaseModel):\n    matching_skills: List[str]\n    missing_skills: List[str]\n    recommendations: str\n\n<span class="text-code-comment">// Calling Groq API with structured schema validation...</span>\nresult = engine.generate_structured_response(\n    prompt=matching_prompt, \n    schema=SkillGapAnalysisSchema\n)`
+        },
+        {
+            title: "Isolated Assessments",
+            content: `<span class="text-code-comment">// Step 4: Run candidate unit tests inside sandbox</span>\n$ docker run --rm -v /candidate_code:/app python-sandbox pytest\n\n<span class="text-code-comment">// Executing unit test suite:</span>\ntests/test_solution.py <span class="text-code-string">PASSED</span> [<span class="text-code-number">100%</span>]\ntests/test_performance.py <span class="text-code-string">PASSED</span> [<span class="text-code-number">100%</span>]\n\n<span class="text-code-comment">// Score: 100/100, Verdict: Verified.</span>`
+        }
+    ];
+
+    function activateStep(index) {
+        // Remove active class from all pills
+        const pills = document.querySelectorAll('.step-pill');
+        pills.forEach(pill => pill.classList.remove('active'));
+        
+        // Add active to selected pill
+        pills[index].classList.add('active');
+        
+        // Inject console code output
+        const output = document.getElementById('console-output');
+        output.innerHTML = stepData[index].content;
+    }
+
+    // Auto-initialize first step on load
+    document.addEventListener("DOMContentLoaded", () => {
+        activateStep(0);
+    });
+</script>
+{% endblock %}

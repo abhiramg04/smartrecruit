@@ -1,0 +1,208 @@
+{% extends 'base.html' %}
+
+{% block title %}Recruitment Reports – SmartRecruit{% endblock %}
+
+{% block content %}
+<style>
+    .reports-card {
+        background: var(--glass-bg, rgba(255, 255, 255, 0.85));
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+        border: 1px solid rgba(91, 174, 160, 0.35);
+        border-radius: 16px;
+        box-shadow: 0 8px 24px rgba(45, 139, 123, 0.10);
+    }
+    .reports-card .form-label {
+        color: #1A4A42 !important;
+        font-weight: 600;
+        font-size: 0.85rem;
+    }
+    .reports-card .form-select,
+    .reports-card .form-control {
+        background-color: #ffffff !important;
+        color: #1A4A42 !important;
+        border: 1.5px solid rgba(91, 174, 160, 0.4) !important;
+        font-weight: 500;
+    }
+    .reports-card .form-select option {
+        background-color: #ffffff !important;
+        color: #1A4A42 !important;
+    }
+    .reports-card .form-check-label {
+        color: #1A4A42 !important;
+        font-weight: 600;
+        font-size: 0.88rem;
+    }
+    .reports-card .report-desc {
+        color: #3D7A70 !important;
+        font-size: 0.85rem;
+        line-height: 1.4;
+    }
+</style>
+
+<div class="animate-fade-in">
+    <!-- Page Header -->
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4">
+        <div>
+            <h1 class="mb-1 fw-800" style="font-size:1.75rem; color:#1A4A42;">📊 Recruitment Reports</h1>
+            <p class="mb-0 fw-500" style="font-size:0.95rem; color:#3D7A70;">
+                Generate, customize, and export platform analytics and pipeline data
+            </p>
+        </div>
+    </div>
+
+    <!-- Reports Hub Grid -->
+    <div class="row g-4 align-items-stretch">
+        
+        <!-- Report 1: Candidate Pipeline Report -->
+        <div class="col-lg-6">
+            <div class="reports-card p-4 h-100 d-flex flex-column justify-content-between">
+                <div>
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
+                            style="width:52px;height:52px;background:rgba(45,139,123,0.15);font-size:1.4rem;color:#2D8B7B;">
+                            📋
+                        </div>
+                        <div>
+                            <h4 class="fw-700 mb-1" style="color:#1A4A42;">Candidate Pipeline Report</h4>
+                            <p class="report-desc mb-0">Export application status details, dates, and AI matching scores.</p>
+                        </div>
+                    </div>
+                    
+                    <form method="get" action="" target="_blank" class="mt-4">
+                        <input type="hidden" name="generate" value="true">
+                        <input type="hidden" name="report_type" value="pipeline">
+                        
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label class="form-label">Filter by Job</label>
+                                <select name="job_id" class="form-select">
+                                    <option value="">All Jobs</option>
+                                    {% for job in jobs %}
+                                    <option value="{{ job.id }}">{{ job.title }} ({{ job.company.name }})</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                            <div class="col-12">
+                                <label class="form-label">Filter by Status</label>
+                                <select name="status" class="form-select">
+                                    <option value="">All Statuses</option>
+                                    {% for val, name in application_statuses %}
+                                    <option value="{{ val }}">{{ name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                            <div class="col-6">
+                                <label class="form-label">Date From</label>
+                                <input type="date" name="date_from" class="form-control">
+                            </div>
+                            
+                            <div class="col-6">
+                                <label class="form-label">Date To</label>
+                                <input type="date" name="date_to" class="form-control">
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label">Format</label>
+                                <div class="d-flex gap-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="format" id="format_pipeline_pdf" value="pdf" checked>
+                                        <label class="form-check-label" for="format_pipeline_pdf">
+                                            📄 PDF document
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="format" id="format_pipeline_csv" value="csv">
+                                        <label class="form-check-label" for="format_pipeline_csv">
+                                            📊 CSV Spreadsheet
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-4 pt-2">
+                            <button type="submit" class="btn btn-primary w-100 py-2 fw-600">
+                                <i class="bi bi-file-earmark-arrow-down me-1"></i> Generate &amp; Download
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Report 2: Job Performance Report -->
+        <div class="col-lg-6">
+            <div class="reports-card p-4 h-100 d-flex flex-column justify-content-between">
+                <div>
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
+                            style="width:52px;height:52px;background:rgba(142,68,173,0.15);font-size:1.4rem;color:#8e44ad;">
+                            📈
+                        </div>
+                        <div>
+                            <h4 class="fw-700 mb-1" style="color:#1A4A42;">Job Performance Report</h4>
+                            <p class="report-desc mb-0">Evaluate candidate counts, average applicant AI scores, and shortlisted statistics per job.</p>
+                        </div>
+                    </div>
+                    
+                    <form method="get" action="" target="_blank" class="mt-4 h-100 d-flex flex-column justify-content-between">
+                        <input type="hidden" name="generate" value="true">
+                        <input type="hidden" name="report_type" value="job_performance">
+                        
+                        <div class="row g-3">
+                            {% if request.user.role == 'ADMIN' %}
+                            <div class="col-12">
+                                <label class="form-label">Filter by Company</label>
+                                <select name="company_id" class="form-select">
+                                    <option value="">All Companies</option>
+                                    {% for comp in companies %}
+                                    <option value="{{ comp.id }}">{{ comp.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            {% endif %}
+                            
+                            <div class="col-12">
+                                <label class="form-label">Job Status</label>
+                                <select name="job_status" class="form-select">
+                                    <option value="">All Jobs</option>
+                                    <option value="active">Active/Published</option>
+                                    <option value="closed">Closed Only</option>
+                                </select>
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label">Format</label>
+                                <div class="d-flex gap-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="format" id="format_perf_pdf" value="pdf" checked>
+                                        <label class="form-check-label" for="format_perf_pdf">
+                                            📄 PDF document
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="format" id="format_perf_csv" value="csv">
+                                        <label class="form-check-label" for="format_perf_csv">
+                                            📊 CSV Spreadsheet
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-4 pt-2">
+                            <button type="submit" class="btn text-white w-100 py-2 fw-600" style="background:#8e44ad;border-color:#8e44ad;">
+                                <i class="bi bi-file-earmark-arrow-down me-1"></i> Generate &amp; Download
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

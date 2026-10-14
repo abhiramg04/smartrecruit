@@ -1,0 +1,313 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+
+{% block title %}Upload Resume - SmartRecruit{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* ── Drop Zone ── */
+  .drop-zone {
+    border: 2px dashed rgba(99, 102, 241, 0.6);
+    border-radius: 16px;
+    padding: 3rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: rgba(99, 102, 241, 0.04);
+    position: relative;
+  }
+  .drop-zone:hover, .drop-zone.dragover {
+    border-color: #6366f1;
+    background: rgba(99, 102, 241, 0.1);
+    transform: scale(1.01);
+  }
+  .drop-zone input[type="file"] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+  }
+  .drop-zone-icon {
+    font-size: 3.5rem;
+    color: #6366f1;
+    margin-bottom: 1rem;
+    display: block;
+  }
+  /* ── Progress Overlay ── */
+  #parse-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(10, 10, 30, 0.88);
+    backdrop-filter: blur(8px);
+    z-index: 9999;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+  }
+  #parse-overlay.active { display: flex; }
+  .parse-spinner {
+    width: 80px;
+    height: 80px;
+    border: 5px solid rgba(99, 102, 241, 0.25);
+    border-top-color: #6366f1;
+    border-radius: 50%;
+    animation: spin 0.9s linear infinite;
+    margin-bottom: 1.5rem;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .parse-step {
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.4s ease;
+    color: rgba(255,255,255,0.7);
+    font-size: 0.95rem;
+    margin: 4px 0;
+  }
+  .parse-step.visible { opacity: 1; transform: translateY(0); color: #a5b4fc; }
+  .parse-step.done { color: #4ade80; }
+  /* ── Feature Badges ── */
+  .feature-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(99,102,241,0.12);
+    border: 1px solid rgba(99,102,241,0.3);
+    border-radius: 999px;
+    padding: 5px 14px;
+    font-size: 0.8rem;
+    color: #a5b4fc;
+    margin: 4px;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- Progress Overlay -->
+<div id="parse-overlay">
+  <div class="parse-spinner"></div>
+  <h4 class="text-white fw-bold mb-3">Analyzing Your Resume...</h4>
+  <div id="parse-steps" class="text-center">
+    <div class="parse-step" id="step-1">📄 Reading document structure</div>
+    <div class="parse-step" id="step-2">🔎 Extracting raw text</div>
+    <div class="parse-step" id="step-3">🤖 Running NLP entity recognition</div>
+    <div class="parse-step" id="step-4">⚡ Extracting skills & sections</div>
+    <div class="parse-step" id="step-5">💾 Saving to your profile</div>
+  </div>
+  <p class="text-white-50 small mt-4">This may take 10–20 seconds for large files</p>
+</div>
+
+<div class="row justify-content-center">
+  <div class="col-lg-8">
+
+    <!-- Page Header -->
+    <div class="text-center mb-5">
+      <h1 class="fw-bold display-5 mb-2">Resume Parser</h1>
+      <p class="text-white-50">Upload your resume and our AI engine will extract your profile instantly.</p>
+      <div class="mt-3">
+        {% for badge in "Name,Email,Phone,Skills,Education,Experience,Projects,Certifications,Languages"|split:"," %}
+        <span class="feature-badge"><i class="bi bi-check-circle-fill text-success"></i> {{ badge }}</span>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Upload Panel -->
+    <div class="glass-panel">
+      {% if messages %}
+        {% for message in messages %}
+          <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>
+          </div>
+        {% endfor %}
+      {% endif %}
+
+      {% if profile.parse_error %}
+      <div class="alert alert-danger mb-4">
+        <i class="bi bi-exclamation-triangle me-2"></i>
+        <strong>Previous Parse Error:</strong> {{ profile.parse_error }}
+      </div>
+      {% endif %}
+
+      <form id="resume-form" method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <!-- Drop Zone -->
+        <div class="drop-zone mb-4" id="drop-zone">
+          <input type="file" name="resume_file" id="id_resume_file" accept=".pdf,.docx,.txt">
+          <i class="bi bi-cloud-arrow-up-fill drop-zone-icon"></i>
+          <h4 class="fw-bold mb-1" id="drop-label">Drag &amp; Drop Your Resume</h4>
+          <p class="text-white-50 mb-3" id="drop-sub">or click to browse files</p>
+          <div class="d-flex justify-content-center gap-3">
+            <span class="badge bg-danger px-3 py-2">PDF</span>
+            <span class="badge bg-primary px-3 py-2">DOCX</span>
+            <span class="badge bg-secondary px-3 py-2">TXT</span>
+          </div>
+          <p class="text-white-50 small mt-2">Maximum file size: 5MB</p>
+        </div>
+
+        <!-- File Preview -->
+        <div id="file-preview" class="d-none mb-4">
+          <div class="d-flex align-items-center gap-3 p-3 rounded" style="background: rgba(99,102,241,0.12); border: 1px solid rgba(99,102,241,0.3);">
+            <i class="bi bi-file-earmark-text-fill text-primary fs-2"></i>
+            <div class="flex-grow-1">
+              <p class="fw-bold mb-0" id="file-name">filename.pdf</p>
+              <p class="text-white-50 small mb-0" id="file-size">0 KB</p>
+            </div>
+            <button type="button" class="btn btn-sm btn-outline-danger" id="clear-file">
+              <i class="bi bi-x-lg"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Error Display -->
+        {% if form.resume_file.errors %}
+          <div class="alert alert-danger">{{ form.resume_file.errors }}</div>
+        {% endif %}
+
+        <button type="submit" id="submit-btn" class="btn btn-primary-custom w-100 py-3 fw-bold fs-5" disabled>
+          <i class="bi bi-cpu me-2"></i> Parse Resume
+        </button>
+      </form>
+
+      <!-- Already Have a Profile Link -->
+      {% if profile.is_parsed %}
+      <div class="text-center mt-4">
+        <p class="text-white-50 mb-2">Already have a parsed profile?</p>
+        <a href="{% url 'candidate_profile' %}" class="btn btn-outline-light btn-sm">
+          <i class="bi bi-person-badge me-1"></i> View My Profile
+        </a>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- How It Works -->
+    <div class="row mt-4 g-3">
+      {% for step in "Upload,Parse,Profile"|split:"," %}
+      <div class="col-md-4">
+        <div class="glass-panel text-center py-4">
+          {% if forloop.counter == 1 %}
+            <i class="bi bi-upload fs-1 text-primary mb-3 d-block"></i>
+            <h6 class="fw-bold">1. Upload</h6>
+            <p class="text-white-50 small mb-0">Drop your PDF, DOCX, or TXT file</p>
+          {% elif forloop.counter == 2 %}
+            <i class="bi bi-cpu fs-1 text-warning mb-3 d-block"></i>
+            <h6 class="fw-bold">2. AI Parse</h6>
+            <p class="text-white-50 small mb-0">spaCy NLP extracts your data</p>
+          {% else %}
+            <i class="bi bi-person-badge fs-1 text-success mb-3 d-block"></i>
+            <h6 class="fw-bold">3. Profile</h6>
+            <p class="text-white-50 small mb-0">Instantly generated resume profile</p>
+          {% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const fileInput = document.getElementById('id_resume_file');
+const dropZone  = document.getElementById('drop-zone');
+const dropLabel = document.getElementById('drop-label');
+const dropSub   = document.getElementById('drop-sub');
+const preview   = document.getElementById('file-preview');
+const fileName  = document.getElementById('file-name');
+const fileSize  = document.getElementById('file-size');
+const clearBtn  = document.getElementById('clear-file');
+const submitBtn = document.getElementById('submit-btn');
+const overlay   = document.getElementById('parse-overlay');
+const form      = document.getElementById('resume-form');
+
+function formatBytes(bytes) {
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+  return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+}
+
+function handleFile(file) {
+  if (!file) return;
+  fileName.textContent = file.name;
+  fileSize.textContent = formatBytes(file.size);
+  preview.classList.remove('d-none');
+  dropLabel.textContent = 'File Selected';
+  dropSub.textContent   = file.name;
+  submitBtn.disabled = false;
+}
+
+fileInput.addEventListener('change', () => handleFile(fileInput.files[0]));
+
+clearBtn.addEventListener('click', () => {
+  fileInput.value = '';
+  preview.classList.add('d-none');
+  dropLabel.textContent = 'Drag & Drop Your Resume';
+  dropSub.textContent   = 'or click to browse files';
+  submitBtn.disabled = true;
+});
+
+// Drag & Drop Events
+['dragenter','dragover'].forEach(evt => {
+  dropZone.addEventListener(evt, e => { e.preventDefault(); dropZone.classList.add('dragover'); });
+});
+['dragleave','drop'].forEach(evt => {
+  dropZone.addEventListener(evt, e => { e.preventDefault(); dropZone.classList.remove('dragover'); });
+});
+dropZone.addEventListener('drop', e => {
+  const dt = e.dataTransfer;
+  if (dt.files.length) {
+    // Manually assign file to input
+    const dataTransfer = new DataTransfer();
+    dataTransfer.items.add(dt.files[0]);
+    fileInput.files = dataTransfer.files;
+    handleFile(dt.files[0]);
+  }
+});
+
+// AJAX Submit with Progress Loader
+form.addEventListener('submit', function(e) {
+  e.preventDefault();
+  if (!fileInput.files.length) return;
+
+  overlay.classList.add('active');
+  const steps = document.querySelectorAll('.parse-step');
+
+  // Animate steps sequentially
+  const delays = [300, 900, 1800, 3200, 5000];
+  steps.forEach((step, i) => {
+    setTimeout(() => {
+      if (i > 0) steps[i - 1].classList.add('done');
+      step.classList.add('visible');
+    }, delays[i]);
+  });
+
+  const formData = new FormData(form);
+  fetch(form.action || window.location.href, {
+    method: 'POST',
+    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+    body: formData,
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.status === 'success') {
+      steps[steps.length - 1].classList.add('done');
+      setTimeout(() => { window.location.href = data.redirect; }, 800);
+    } else {
+      overlay.classList.remove('active');
+      const msg = typeof data.message === 'string' ? data.message : JSON.stringify(data.message);
+      alert('⚠️ Parse Error: ' + msg);
+    }
+  })
+  .catch(err => {
+    overlay.classList.remove('active');
+    console.error(err);
+    alert('An unexpected network error occurred. Please try again.');
+  });
+});
+</script>
+{% endblock %}

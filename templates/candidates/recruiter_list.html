@@ -1,0 +1,149 @@
+{% extends 'base.html' %}
+
+{% block title %}Candidates - SmartRecruit{% endblock %}
+
+{% block content %}
+<div class="page-header animate-fade-in d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+    <div>
+        <h2 class="fw-bold m-0" style="color: var(--cream);">Candidate Pool</h2>
+        <p class="mb-0" style="color: rgba(254,255,214,0.85);">Browse and discover talent from parsed resumes</p>
+    </div>
+</div>
+
+<!-- Search & Filters -->
+<div class="card bg-white border-0 shadow-sm mb-4 animate-fade-in">
+    <div class="card-body p-4">
+        <form method="get" action="{% url 'recruiter_candidate_list' %}" class="row g-3 align-items-end">
+            <div class="col-md-5">
+                <label class="form-label fw-600 small text-deep-teal">Search by Name or Email</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-mint text-teal"><i class="bi bi-search"></i></span>
+                    <input type="text" name="q" class="form-control border-mint border-start-0"
+                           placeholder="e.g. John Doe, john@example.com" value="{{ q }}">
+                </div>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label fw-600 small text-deep-teal">Filter by Skill</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-mint text-teal"><i class="bi bi-tools"></i></span>
+                    <input type="text" name="skill" class="form-control border-mint border-start-0"
+                           placeholder="e.g. Python, React, SQL" value="{{ skill }}">
+                </div>
+            </div>
+            <div class="col-md-3 d-flex gap-2">
+                <button type="submit" class="btn btn-primary-custom fw-bold flex-grow-1 shadow-teal">
+                    <i class="bi bi-funnel me-1"></i> Search
+                </button>
+                <a href="{% url 'recruiter_candidate_list' %}" class="btn btn-outline-secondary fw-600 px-3">Clear</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h6 class="fw-bold text-dark m-0">All Candidates</h6>
+    <span class="badge badge-cream text-teal border-mint fw-600 px-3 py-2">{{ page_obj.paginator.count }} candidate{{ page_obj.paginator.count|pluralize }} found</span>
+</div>
+
+{% if candidates %}
+    <div class="row g-4 animate-children">
+        {% for candidate in candidates %}
+        <div class="col-xl-4 col-md-6">
+            <div class="card bg-white border-0 shadow-sm h-100 hover-lift">
+                <div class="card-body p-4 d-flex flex-column">
+                    <!-- Header -->
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center fw-bold fs-4 flex-shrink-0 shadow-sm"
+                             style="width: 56px; height: 56px; background: var(--mint-light); color: var(--teal);">
+                            {{ candidate.full_name|first|upper|default:candidate.user.username|first|upper }}
+                        </div>
+                        <div class="overflow-hidden">
+                            <h6 class="fw-bold text-dark mb-0 text-truncate">{{ candidate.full_name|default:candidate.user.get_full_name|default:candidate.user.username }}</h6>
+                            <p class="text-muted small mb-0 text-truncate">{{ candidate.email|default:candidate.user.email }}</p>
+                        </div>
+                    </div>
+
+                    <!-- Skills (first 5) -->
+                    {% if candidate.skills %}
+                    <div class="mb-3">
+                        <div class="d-flex flex-wrap gap-1">
+                            {% for skill in candidate.skills|slice:":5" %}
+                                <span class="badge badge-cream text-teal border-mint small fw-600">{{ skill }}</span>
+                            {% endfor %}
+                            {% if candidate.skills|length > 5 %}
+                                <span class="badge bg-light text-muted border small">+{{ candidate.skills|length|add:"-5" }} more</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% else %}
+                    <p class="text-muted small mb-3 fst-italic">No skills extracted.</p>
+                    {% endif %}
+
+                    <!-- Stats row -->
+                    <div class="d-flex gap-3 text-muted small mb-3 flex-grow-1">
+                        {% if candidate.experience %}
+                        <span><i class="bi bi-briefcase text-teal me-1"></i>{{ candidate.experience|length }} exp.</span>
+                        {% endif %}
+                        {% if candidate.education %}
+                        <span><i class="bi bi-mortarboard text-teal me-1"></i>{{ candidate.education|length }} edu.</span>
+                        {% endif %}
+                        <span><i class="bi bi-calendar text-teal me-1"></i>{{ candidate.uploaded_at|timesince }} ago</span>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="d-flex gap-2 mt-auto pt-3 border-top border-mint">
+                        <a href="{% url 'recruiter_candidate_detail' candidate.pk %}"
+                           class="btn btn-sm btn-primary-custom fw-bold flex-grow-1">
+                            <i class="bi bi-person-lines-fill me-1"></i> View Profile
+                        </a>
+                        {% if candidate.phone %}
+                        <a href="tel:{{ candidate.phone }}" class="btn btn-sm btn-outline-teal fw-600 px-3"
+                           title="{{ candidate.phone }}">
+                            <i class="bi bi-telephone"></i>
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if is_paginated %}
+    <nav class="mt-5">
+        <ul class="pagination justify-content-center gap-1">
+            {% if page_obj.has_previous %}
+                <li class="page-item"><a class="page-link border-mint text-teal rounded" href="?page={{ page_obj.previous_page_number }}&q={{ q }}&skill={{ skill }}">Previous</a></li>
+            {% endif %}
+            <li class="page-item active"><span class="page-link rounded" style="background: var(--teal); border-color: var(--teal);">{{ page_obj.number }}</span></li>
+            {% if page_obj.has_next %}
+                <li class="page-item"><a class="page-link border-mint text-teal rounded" href="?page={{ page_obj.next_page_number }}&q={{ q }}&skill={{ skill }}">Next</a></li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+
+{% else %}
+    <div class="card bg-white border-0 shadow-sm text-center py-5">
+        <div class="card-body py-5">
+            <div class="mx-auto mb-4 d-flex align-items-center justify-content-center rounded-circle"
+                 style="width: 80px; height: 80px; background: var(--mint-light); color: var(--teal);">
+                <i class="bi bi-people fs-1"></i>
+            </div>
+            <h4 class="fw-bold text-dark mb-2">No Candidates Found</h4>
+            <p class="text-muted mb-4">{% if q or skill %}Try adjusting your search or filters.{% else %}No parsed candidate profiles exist yet.{% endif %}</p>
+            {% if q or skill %}
+            <a href="{% url 'recruiter_candidate_list' %}" class="btn btn-outline-teal fw-600 px-4">Clear Filters</a>
+            {% endif %}
+        </div>
+    </div>
+{% endif %}
+
+<style>
+    .hover-lift { transition: transform 0.2s ease, box-shadow 0.2s ease; }
+    .hover-lift:hover { transform: translateY(-4px); box-shadow: 0 12px 24px rgba(45,139,123,0.12) !important; }
+    .btn-outline-teal { border-color: var(--teal); color: var(--teal); }
+    .btn-outline-teal:hover { background: var(--teal); color: white; }
+</style>
+{% endblock %}

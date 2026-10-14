@@ -1,0 +1,59 @@
+# Environment variables & secrets (CRITICAL: Never commit API keys)
+.env
+*.env
+.env.*
+!.env.example
+
+# Python & Django byte-code / cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Database
+*.sqlite3
+db.sqlite3
+
+# Virtual Environments
+venv/
+env/
+ENV/
+.venv/
+
+# Uploaded candidate media / resumes (keep directory, ignore uploaded contents)
+media/*
+!media/.gitkeep
+
+# Django collected static (if deployed)
+staticfiles/
+
+# Logs & temp data
+*.log
+scratch/
+
+# IDE & Editor files
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+desktop.ini

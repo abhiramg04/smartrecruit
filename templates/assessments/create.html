@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+
+{% block title %}Create Assessment - SmartRecruit{% endblock %}
+
+{% block content %}
+<div class="page-header animate-fade-in d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+    <div>
+        <h2 class="fw-bold m-0" style="color: #1F6B5C !important;">Create Technical Assessment</h2>
+        <p class="mb-0 fw-600" style="color: #3D7A70 !important;">Define assessment parameters and target job</p>
+    </div>
+    <a href="{% url 'assessments:dashboard' %}" class="btn btn-outline-light btn-sm fw-600">
+        <i class="bi bi-arrow-left me-1"></i> Back to Assessments
+    </a>
+</div>
+
+<div class="row justify-content-center animate-children">
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Assessment Title</label>
+                        {{ form.title }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Description</label>
+                        {{ form.description }}
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Duration (Minutes)</label>
+                            {{ form.duration_minutes }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Pass Mark (%)</label>
+                            {{ form.pass_percentage }}
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Associated Job (Optional)</label>
+                        {{ form.job }}
+                    </div>
+                    <button type="submit" class="btn btn-primary-custom w-100 py-2 fw-bold shadow-teal">
+                        Create & Add Questions <i class="bi bi-arrow-right ms-1"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

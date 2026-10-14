@@ -1,0 +1,282 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Applications - SmartRecruit{% endblock %}
+
+{% block content %}
+<div class="page-header animate-fade-in d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+    <div>
+        <h1 class="fw-bold m-0" style="color: var(--cream);">Manage Applications</h1>
+        <p class="mb-0" style="color: rgba(254,255,214,0.85);">
+            Review candidates who applied to your jobs
+            {% if show_ai_ranking %}<span class="badge ms-2" style="background:var(--teal);font-size:.75rem;"><i class="bi bi-stars me-1"></i>AI Ranked</span>{% endif %}
+        </p>
+    </div>
+
+    <form method="get" class="d-flex gap-2 flex-wrap">
+        <input type="text" name="q" value="{{ request.GET.q|default:'' }}" class="form-control bg-white border-0 shadow-sm text-dark fw-500 w-auto" placeholder="Search applicant, email, job...">
+        <select name="status" class="form-select bg-white border-0 shadow-sm text-deep-teal fw-600 w-auto" onchange="this.form.submit()">
+            <option value="">All Statuses</option>
+            <option value="APPLIED"      {% if request.GET.status == 'APPLIED' %}selected{% endif %}>Applied</option>
+            <option value="SCREENING"    {% if request.GET.status == 'SCREENING' %}selected{% endif %}>In Screening</option>
+            <option value="AI_SCREENED"  {% if request.GET.status == 'AI_SCREENED' %}selected{% endif %}>AI Screened</option>
+            <option value="SHORTLISTED"  {% if request.GET.status == 'SHORTLISTED' %}selected{% endif %}>Shortlisted</option>
+            <option value="ASSESSMENT"   {% if request.GET.status == 'ASSESSMENT' %}selected{% endif %}>Assessment</option>
+            <option value="INTERVIEW"    {% if request.GET.status == 'INTERVIEW' %}selected{% endif %}>Interview</option>
+            <option value="HOLD"         {% if request.GET.status == 'HOLD' %}selected{% endif %}>On Hold</option>
+            <option value="OFFER"        {% if request.GET.status == 'OFFER' %}selected{% endif %}>Selected / Offer</option>
+            <option value="REJECTED"     {% if request.GET.status == 'REJECTED' %}selected{% endif %}>Rejected</option>
+        </select>
+        <select name="job_id" class="form-select bg-white border-0 shadow-sm text-deep-teal fw-600 pe-5 w-auto" onchange="this.form.submit()">
+            <option value="">All Jobs</option>
+            {% for j in company_jobs %}
+                <option value="{{ j.id }}" {% if request.GET.job_id == j.id|stringformat:"s" %}selected{% endif %}>{{ j.title }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit" class="btn btn-primary-custom shadow-sm"><i class="bi bi-search"></i> Search</button>
+    </form>
+</div>
+
+{# ── AI Ranking disclaimer (only when filtered by job) ─────────────────── #}
+{% if show_ai_ranking %}
+<div class="alert border-0 rounded-3 mb-4 px-4 py-3 d-flex gap-3 align-items-start"
+     style="background:rgba(45,139,123,0.08);border-left:4px solid var(--teal) !important;">
+    <i class="bi bi-info-circle-fill fs-5 mt-1" style="color:var(--teal);flex-shrink:0;"></i>
+    <div class="small">
+        <strong style="color:var(--teal);">AI Ranking is Decision Support Only.</strong>
+        Candidates are sorted by their overall AI match score for this job.
+        AI scores are based solely on professional skills, experience, and education — never on protected personal attributes.
+        <strong>The final hiring decision always belongs to the recruiter.</strong>
+    </div>
+</div>
+{% endif %}
+
+{% if applications %}
+    <div class="row g-4 animate-children">
+        {% for app in applications %}
+        {% with ai=app.ai_score %}
+        <div class="col-12">
+            <div class="card border-0 shadow-sm rounded-3 hover-lift" style="transition: transform 0.2s ease, box-shadow 0.2s ease;{% if show_ai_ranking and ai %}border-left:4px solid {% if ai.overall_score >= 70 %}var(--success,#1a9e6b){% elif ai.overall_score >= 45 %}#e6a817{% else %}var(--danger,#dc3545){% endif %} !important;{% endif %}">
+                <div class="card-body p-4">
+                    <div class="row align-items-start g-3">
+
+                        {# ── Candidate Info ─────────────────────────────── #}
+                        <div class="col-md-4">
+                            <div class="d-flex align-items-center gap-2 mb-1">
+                                {% if show_ai_ranking %}
+                                <span class="badge rounded-pill px-2" style="background:var(--teal);color:#fff;font-size:.7rem;">#{{ forloop.counter }}</span>
+                                {% endif %}
+                                <h5 class="fw-bold text-dark mb-0">
+                                    {{ app.candidate.user.get_full_name|default:app.candidate.user.username }}
+                                </h5>
+                            </div>
+                            <p class="mb-2" style="color:var(--teal);font-weight:600;">
+                                Applied for <a href="{% url 'job_detail' app.job.pk %}" class="text-teal text-decoration-none">{{ app.job.title }}</a>
+                            </p>
+                            <div class="d-flex flex-wrap gap-3 text-muted small">
+                                <span><i class="bi bi-geo-alt me-1 text-teal"></i>{{ app.candidate.location|default:"N/A" }}</span>
+                                <span><i class="bi bi-clock me-1 text-teal"></i>{{ app.applied_at|timesince }} ago</span>
+                            </div>
+                            {% if app.hiring_decision and app.hiring_decision != 'PENDING' %}
+                            <div class="mt-2">
+                                <span class="badge {% if app.hiring_decision == 'SELECT' %}bg-success{% elif app.hiring_decision == 'HOLD' %}bg-warning text-dark{% else %}bg-danger{% endif %} px-2 py-1">
+                                    Final: {{ app.get_hiring_decision_display }}
+                                </span>
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        {# ── AI Ranking Panel ────────────────────────────── #}
+                        <div class="col-md-4">
+                            {% if ai %}
+                            <div class="rounded-3 p-3" style="background:rgba(45,139,123,0.05);">
+
+                                {# Overall score + recommendation badge #}
+                                <div class="d-flex align-items-center justify-content-between mb-2">
+                                    <span class="small fw-600 text-muted"><i class="bi bi-cpu me-1" style="color:var(--teal);"></i>AI Match Score</span>
+                                    <span class="fw-bold fs-5
+                                        {% if ai.overall_score >= 70 %}text-success
+                                        {% elif ai.overall_score >= 45 %}text-warning
+                                        {% else %}text-danger{% endif %}">
+                                        {{ ai.overall_score|floatformat:1 }}%
+                                    </span>
+                                </div>
+
+                                {# Recommendation badge #}
+                                <div class="mb-2">
+                                    <span class="badge px-2 py-1
+                                        {% if ai.ai_recommendation == 'SUITABLE' %}bg-success
+                                        {% elif ai.ai_recommendation == 'MAYBE' %}bg-warning text-dark
+                                        {% else %}bg-danger{% endif %}">
+                                        <i class="bi {% if ai.ai_recommendation == 'SUITABLE' %}bi-check-circle{% elif ai.ai_recommendation == 'MAYBE' %}bi-question-circle{% else %}bi-x-circle{% endif %} me-1"></i>
+                                        {{ ai.ai_recommendation|default:"—" }}
+                                    </span>
+                                </div>
+
+                                {# Score bars #}
+                                <div class="small text-muted">
+                                    {% with bars=True %}
+                                    <div class="mb-1 d-flex align-items-center gap-2">
+                                        <span style="width:80px;flex-shrink:0;">Skills</span>
+                                        <div class="progress flex-grow-1" style="height:7px;">
+                                            <div class="progress-bar bg-success" style="width:{{ ai.skill_score|floatformat:0 }}%"></div>
+                                        </div>
+                                        <span style="width:38px;text-align:right;">{{ ai.skill_score|floatformat:0 }}%</span>
+                                    </div>
+                                    <div class="mb-1 d-flex align-items-center gap-2">
+                                        <span style="width:80px;flex-shrink:0;">Experience</span>
+                                        <div class="progress flex-grow-1" style="height:7px;">
+                                            <div class="progress-bar" style="width:{{ ai.experience_score|floatformat:0 }}%;background:var(--teal);"></div>
+                                        </div>
+                                        <span style="width:38px;text-align:right;">{{ ai.experience_score|floatformat:0 }}%</span>
+                                    </div>
+                                    <div class="mb-1 d-flex align-items-center gap-2">
+                                        <span style="width:80px;flex-shrink:0;">Semantic</span>
+                                        <div class="progress flex-grow-1" style="height:7px;">
+                                            <div class="progress-bar bg-info" style="width:{{ ai.semantic_score|floatformat:0 }}%"></div>
+                                        </div>
+                                        <span style="width:38px;text-align:right;">{{ ai.semantic_score|floatformat:0 }}%</span>
+                                    </div>
+                                    {% endwith %}
+                                </div>
+
+                                {# Strengths & missing skills (compact) #}
+                                {% if ai.ai_strengths %}
+                                <div class="mt-2 small">
+                                    <span class="fw-600 text-success"><i class="bi bi-check2-circle me-1"></i>Strengths:</span>
+                                    {% for s in ai.ai_strengths|slice:":3" %}<span class="badge bg-success bg-opacity-10 text-success me-1">{{ s }}</span>{% endfor %}
+                                </div>
+                                {% endif %}
+                                {% if ai.ai_missing_skills %}
+                                <div class="mt-1 small">
+                                    <span class="fw-600 text-danger"><i class="bi bi-exclamation-circle me-1"></i>Missing:</span>
+                                    {% for s in ai.ai_missing_skills|slice:":3" %}<span class="badge bg-danger bg-opacity-10 text-danger me-1">{{ s }}</span>{% endfor %}
+                                </div>
+                                {% endif %}
+
+                                {# AI rationale (collapsed) #}
+                                {% if ai.ai_rationale %}
+                                <div class="mt-2">
+                                    <button class="btn btn-link btn-sm p-0 text-muted small" type="button"
+                                            data-bs-toggle="collapse" data-bs-target="#rationale-{{ app.pk }}">
+                                        <i class="bi bi-chat-quote me-1"></i>AI reasoning
+                                    </button>
+                                    <div class="collapse mt-1" id="rationale-{{ app.pk }}">
+                                        <p class="small text-muted fst-italic mb-0 p-2 rounded" style="background:rgba(0,0,0,0.04);">{{ ai.ai_rationale }}</p>
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </div>
+                            {% else %}
+                            <div class="text-muted small fst-italic d-flex align-items-center gap-2 py-3">
+                                <i class="bi bi-hourglass-split" style="color:var(--teal);"></i>
+                                AI score not yet generated
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        {# ── Status + Actions ────────────────────────────── #}
+                        <div class="col-md-4 text-md-end border-start-md ps-md-4">
+                            {# Status badge #}
+                            <div class="mb-3">
+                                <span class="badge rounded-pill px-3 py-2 fw-600
+                                    {% if app.status == 'OFFER' %} bg-success text-white
+                                    {% elif app.status == 'REJECTED' %} bg-danger text-white
+                                    {% elif app.status == 'HOLD' %} bg-warning text-dark
+                                    {% elif app.status == 'AI_SCREENED' or app.status == 'SCREENING' %} bg-info text-white
+                                    {% elif app.status == 'SHORTLISTED' or app.status == 'INTERVIEW' or app.status == 'HR_ROUND' %} badge-teal
+                                    {% else %} bg-secondary text-white {% endif %}"
+                                    style="font-size:0.85rem;">
+                                    {% if app.status == 'OFFER' %}<i class="bi bi-trophy me-1"></i>
+                                    {% elif app.status == 'REJECTED' %}<i class="bi bi-x-circle me-1"></i>
+                                    {% elif app.status == 'HOLD' %}<i class="bi bi-pause-circle me-1"></i>
+                                    {% elif app.status == 'AI_SCREENED' %}<i class="bi bi-stars me-1"></i>
+                                    {% elif app.status == 'SCREENING' %}<i class="bi bi-cpu me-1"></i>
+                                    {% elif app.status == 'SHORTLISTED' or app.status == 'INTERVIEW' %}<i class="bi bi-star me-1"></i>
+                                    {% else %}<i class="bi bi-clock-history me-1"></i>{% endif %}
+                                    {{ app.get_status_display }}
+                                </span>
+                            </div>
+
+                            {# Resume link #}
+                            {% if app.candidate.resume_file %}
+                                <a href="{{ app.candidate.resume_file.url }}" target="_blank" class="badge badge-cream text-teal border-mint text-decoration-none mb-3">
+                                    <i class="bi bi-file-earmark-pdf me-1"></i> View CV
+                                </a>
+                            {% endif %}
+
+                            {# Quick actions #}
+                            <div class="d-flex justify-content-md-end justify-content-between gap-1 mt-2 flex-wrap">
+                                <form method="post" action="{% url 'application_quick_action' app.pk 'shortlist' %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-outline-success fw-600 px-2" title="Shortlist Candidate">
+                                        <i class="bi bi-star-fill"></i> Shortlist
+                                    </button>
+                                </form>
+                                <form method="post" action="{% url 'application_quick_action' app.pk 'hold' %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-outline-warning text-dark fw-600 px-2" title="Hold Candidate">
+                                        <i class="bi bi-pause-circle"></i> Hold
+                                    </button>
+                                </form>
+                                <form method="post" action="{% url 'application_quick_action' app.pk 'reject' %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-outline-danger fw-600 px-2" onclick="return confirm('Reject candidate?');" title="Reject Candidate">
+                                        <i class="bi bi-x-circle"></i> Reject
+                                    </button>
+                                </form>
+
+                                <a href="{% url 'hiring_decision' app.pk %}" class="btn btn-sm btn-primary-custom fw-bold shadow-teal px-2" title="Review Evidence &amp; Make Decision">
+                                    <i class="bi bi-check2-circle me-1"></i> Hiring Decision
+                                </a>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endwith %}
+        {% endfor %}
+    </div>
+
+    {# Pagination #}
+    {% if is_paginated %}
+    <div class="d-flex justify-content-center mt-5">
+        <ul class="pagination pagination-sm shadow-sm">
+            {% if page_obj.has_previous %}
+                <li class="page-item"><a class="page-link text-teal fw-600" href="?page={{ page_obj.previous_page_number }}&job_id={{ request.GET.job_id }}&status={{ request.GET.status }}&q={{ request.GET.q }}"><i class="bi bi-chevron-left"></i></a></li>
+            {% endif %}
+            <li class="page-item active"><span class="page-link" style="background:var(--teal);border-color:var(--teal);">{{ page_obj.number }}</span></li>
+            {% if page_obj.has_next %}
+                <li class="page-item"><a class="page-link text-teal fw-600" href="?page={{ page_obj.next_page_number }}&job_id={{ request.GET.job_id }}&status={{ request.GET.status }}&q={{ request.GET.q }}"><i class="bi bi-chevron-right"></i></a></li>
+            {% endif %}
+        </ul>
+    </div>
+    {% endif %}
+
+{% else %}
+    <div class="card border-0 shadow-sm text-center py-5 mt-4">
+        <div class="card-body py-5">
+            <div class="mx-auto mb-4 d-flex align-items-center justify-content-center rounded-circle"
+                 style="width:80px;height:80px;background:var(--mint-light);color:var(--teal);">
+                <i class="bi bi-inbox fs-1"></i>
+            </div>
+            <h4 class="fw-bold text-dark mb-2">No Applications Yet</h4>
+            <p class="text-muted mb-4 max-w-md mx-auto">No candidates have applied to your jobs yet.</p>
+        </div>
+    </div>
+{% endif %}
+
+<style>
+    .hover-lift:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 20px rgba(45, 139, 123, 0.1) !important;
+    }
+    @media (min-width: 768px) {
+        .border-start-md {
+            border-left: 1px solid var(--border);
+        }
+    }
+    .progress { background: rgba(0,0,0,0.07); border-radius: 10px; }
+</style>
+{% endblock %}

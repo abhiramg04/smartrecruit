@@ -1,0 +1,229 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+
+{% block title %}AI Ranking Dashboard — {{ job.title }} - SmartRecruit{% endblock %}
+
+{% block extra_css %}
+<style>
+  .rank-card {
+    background: var(--glass-bg);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.4rem 1.6rem;
+    transition: all 0.25s ease;
+    position: relative;
+    box-shadow: 0 4px 12px rgba(45, 139, 123, 0.05);
+  }
+  .rank-card:hover { border-color: var(--teal); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(45, 139, 123, 0.12); }
+
+  .rank-num {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 0.9rem; flex-shrink: 0;
+  }
+  .rank-1 { background: linear-gradient(135deg,#f59e0b,#d97706); color:#fff; }
+  .rank-2 { background: linear-gradient(135deg,#94a3b8,#64748b); color:#fff; }
+  .rank-3 { background: linear-gradient(135deg,#c2700a,#92400e); color:#fff; }
+  .rank-other { background: rgba(99,102,241,0.2); color:#a5b4fc; }
+
+  .score-ring-wrap { position:relative; width:64px; height:64px; flex-shrink:0; }
+  .score-ring-wrap svg { transform: rotate(-90deg); }
+  .score-ring-text {
+    position:absolute; inset:0;
+    display:flex; align-items:center; justify-content:center;
+    font-size:0.8rem; font-weight:700;
+  }
+  .verdict-pill {
+    display:inline-flex; align-items:center; gap:6px;
+    padding:4px 14px; border-radius:999px;
+    font-size:0.75rem; font-weight:700; letter-spacing:.5px;
+  }
+  .pill-SUITABLE { background:rgba(74,222,128,.15); color:#4ade80; border:1px solid rgba(74,222,128,.35); }
+  .pill-MAYBE    { background:rgba(251,191,36,.15);  color:#fbbf24; border:1px solid rgba(251,191,36,.35); }
+  .pill-REJECT   { background:rgba(248,113,113,.15); color:#f87171; border:1px solid rgba(248,113,113,.35); }
+
+  .unranked-card {
+    background: var(--bg-section);
+    border: 1px dashed var(--border);
+    border-radius: 12px;
+    padding: 1rem 1.4rem;
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 0.6rem;
+  }
+  .stat-mini { text-align:center; }
+  .stat-mini .num { font-size:2rem; font-weight:800; line-height:1; }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
+  <div>
+    <p class="text-muted small mb-1"><a href="{% url 'job_detail' job.id %}" class="text-muted text-decoration-none">← Back to Job</a></p>
+    <h1 class="fw-bold mb-1">AI Ranking Dashboard</h1>
+    <p class="text-muted mb-0">{{ job.title }} · {{ job.company.name }}</p>
+  </div>
+  <div class="glass-panel py-2 px-4 d-flex gap-4">
+    <div class="stat-mini">
+      <div class="num text-primary">{{ results.count }}</div>
+      <div class="text-muted small">Ranked</div>
+    </div>
+    <div class="stat-mini">
+      <div class="num text-warning">{{ unranked.count }}</div>
+      <div class="text-muted small">Pending</div>
+    </div>
+    <div class="stat-mini">
+      <div class="num text-success">{{ results|length }}</div>
+      <div class="text-muted small">Total Apps</div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4">
+  <!-- RANKED LIST -->
+  <div class="col-lg-8">
+    <h5 class="fw-bold mb-3 text-muted">
+      <i class="bi bi-trophy-fill text-warning me-2"></i>Ranked Candidates
+    </h5>
+
+    {% if results %}
+      {% for r in results %}
+      <div class="rank-card mb-3">
+        <div class="d-flex align-items-center gap-3">
+          <!-- Rank Number -->
+          <div class="rank-num {% if forloop.counter == 1 %}rank-1{% elif forloop.counter == 2 %}rank-2{% elif forloop.counter == 3 %}rank-3{% else %}rank-other{% endif %}">
+            #{{ forloop.counter }}
+          </div>
+
+          <!-- Score Ring -->
+          {% with score=r.overall_score|floatformat:0 %}
+          <div class="score-ring-wrap">
+            <svg viewBox="0 0 64 64" width="64" height="64">
+              <circle cx="32" cy="32" r="26" fill="none" stroke="rgba(45,139,123,0.15)" stroke-width="6"/>
+              <circle cx="32" cy="32" r="26" fill="none"
+                stroke="{% if r.overall_score >= 70 %}#4ade80{% elif r.overall_score >= 45 %}#fbbf24{% else %}#f87171{% endif %}"
+                stroke-width="6"
+                stroke-dasharray="163.36"
+                stroke-dashoffset="{{ 163.36|floatformat:2 }}"
+                style="--score: {{ score|default:0 }}; stroke-dashoffset: calc(163.36 - (163.36 * var(--score) / 100));"
+                stroke-linecap="round"/>
+            </svg>
+            <div class="score-ring-text">{{ score }}%</div>
+          </div>
+          {% endwith %}
+
+          <!-- Candidate Info -->
+          <div class="flex-grow-1">
+            <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
+              <h6 class="fw-bold mb-0">
+                {{ r.application.candidate.full_name|default:r.application.candidate.user.get_full_name|default:"Unknown Candidate" }}
+              </h6>
+              <span class="verdict-pill pill-{{ r.verdict }}">
+                {% if r.verdict == 'SUITABLE' %}<i class="bi bi-check-circle-fill"></i>
+                {% elif r.verdict == 'MAYBE' %}<i class="bi bi-question-circle-fill"></i>
+                {% else %}<i class="bi bi-x-circle-fill"></i>{% endif %}
+                {{ r.verdict }}
+              </span>
+            </div>
+            <!-- Score Bars -->
+            <div class="d-flex gap-3 flex-wrap small text-muted">
+              <span title="Skill Match"><i class="bi bi-lightning-charge text-primary"></i> {{ r.skill_score|floatformat:0 }}%</span>
+              <span title="Experience"><i class="bi bi-briefcase text-info"></i> {{ r.experience_score|floatformat:0 }}%</span>
+              <span title="Education"><i class="bi bi-mortarboard text-warning"></i> {{ r.education_score|floatformat:0 }}%</span>
+              <span title="Projects"><i class="bi bi-diagram-3 text-success"></i> {{ r.project_score|floatformat:0 }}%</span>
+              <span title="Certifications"><i class="bi bi-patch-check text-danger"></i> {{ r.cert_score|floatformat:0 }}%</span>
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div class="d-flex gap-2 flex-shrink-0">
+            <a href="{% url 'ranking_result' r.pk %}" class="btn btn-sm btn-outline-light">
+              <i class="bi bi-eye me-1"></i> Details
+            </a>
+            <form action="{% url 'generate_interview_questions' r.application.pk %}" method="post" class="d-inline">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-sm btn-outline-primary" title="Generate Interview Questions">
+                <i class="bi bi-chat-dots"></i> Questions
+              </button>
+            </form>
+            <form action="{% url 'trigger_ranking' r.application.pk %}" method="post" class="d-inline">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-sm btn-outline-secondary" title="Re-rank">
+                <i class="bi bi-arrow-repeat"></i>
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <!-- Missing Skills Preview -->
+        {% if r.missing_skills %}
+        <div class="mt-2 ms-5 ps-3">
+          <span class="text-muted small">Missing: </span>
+          {% for skill in r.missing_skills|slice:":5" %}
+            <span class="badge bg-danger bg-opacity-25 text-danger border border-danger border-opacity-25 me-1">{{ skill }}</span>
+          {% endfor %}
+          {% if r.missing_skills|length > 5 %}
+            <span class="text-muted small">+{{ r.missing_skills|length|add:"-5" }} more</span>
+          {% endif %}
+        </div>
+        {% endif %}
+      </div>
+      {% endfor %}
+
+    {% else %}
+      <div class="glass-panel text-center py-5">
+        <i class="bi bi-robot display-3 text-muted mb-3 d-block"></i>
+        <h5 class="text-muted">No rankings yet</h5>
+        <p class="text-muted small">Rank candidates below to see AI-powered results here.</p>
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- UNRANKED & SIDEBAR -->
+  <div class="col-lg-4">
+    <h5 class="fw-bold mb-3 text-muted">
+      <i class="bi bi-hourglass-split text-warning me-2"></i>Pending Rank
+    </h5>
+
+    {% if unranked %}
+      {% for app in unranked %}
+      <div class="unranked-card">
+        <div>
+          <p class="fw-semibold mb-0 small">
+            {{ app.candidate.full_name|default:app.candidate.user.get_full_name|default:"Candidate" }}
+          </p>
+          <p class="text-muted mb-0" style="font-size:0.75rem;">
+            Applied {{ app.applied_at|timesince }} ago
+          </p>
+        </div>
+        <form action="{% url 'trigger_ranking' app.pk %}" method="post">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-sm btn-primary-custom fw-bold">
+            <i class="bi bi-cpu me-1"></i> Rank
+          </button>
+        </form>
+      </div>
+      {% endfor %}
+    {% else %}
+      <div class="glass-panel text-center py-4">
+        <i class="bi bi-check2-all text-success fs-1 mb-2 d-block"></i>
+        <p class="text-muted small mb-0">All applicants ranked!</p>
+      </div>
+    {% endif %}
+
+    <!-- Legend -->
+    <div class="glass-panel mt-4">
+      <h6 class="fw-bold mb-3 text-muted">Score Weights</h6>
+
+      <div class="d-flex flex-column gap-2 small">
+        <div class="d-flex justify-content-between"><span><i class="bi bi-lightning-charge text-primary"></i> Skills</span><strong>40%</strong></div>
+        <div class="d-flex justify-content-between"><span><i class="bi bi-briefcase text-info"></i> Experience</span><strong>20%</strong></div>
+        <div class="d-flex justify-content-between"><span><i class="bi bi-mortarboard text-warning"></i> Education</span><strong>15%</strong></div>
+        <div class="d-flex justify-content-between"><span><i class="bi bi-diagram-3 text-success"></i> Projects</span><strong>15%</strong></div>
+        <div class="d-flex justify-content-between"><span><i class="bi bi-patch-check text-danger"></i> Certifications</span><strong>10%</strong></div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

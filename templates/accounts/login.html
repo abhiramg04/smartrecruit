@@ -1,0 +1,559 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Sign in to SmartRecruit – the AI-powered recruitment intelligence platform for candidates, recruiters, and admins.">
+    <title>Sign In – SmartRecruit</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="{% static 'css/style.css' %}" rel="stylesheet">
+    <style>
+        /* ── Page shell ───────────────────────────────────── */
+        body {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+        .auth-shell {
+            flex: 1;
+            display: flex;
+            align-items: stretch;
+            padding-top: 64px; /* navbar height */
+            min-height: 100vh;
+        }
+
+        /* ── Left hero panel ──────────────────────────────── */
+        .auth-hero {
+            position: relative;
+            width: 42%;
+            min-height: calc(100vh - 64px);
+            background: linear-gradient(155deg,
+                #1F6B5C 0%,
+                #2D8B7B 40%,
+                #5BAEA0 75%,
+                #8FDFD4 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 3rem 2.5rem;
+            overflow: hidden;
+        }
+        /* Decorative blobs */
+        .auth-hero::before {
+            content: '';
+            position: absolute;
+            width: 420px; height: 420px;
+            border-radius: 50%;
+            background: rgba(254,255,214,0.07);
+            top: -100px; right: -100px;
+            pointer-events: none;
+        }
+        .auth-hero::after {
+            content: '';
+            position: absolute;
+            width: 280px; height: 280px;
+            border-radius: 50%;
+            background: rgba(254,255,214,0.05);
+            bottom: -60px; left: -60px;
+            pointer-events: none;
+        }
+        /* Floating particle dots */
+        .hero-dot {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(254,255,214,0.18);
+            pointer-events: none;
+        }
+
+        .hero-content { position: relative; z-index: 2; text-align: center; width: 100%; }
+
+        .hero-brand {
+            font-size: 2rem; font-weight: 900;
+            color: #FEFFD6;
+            letter-spacing: -0.05em;
+            display: flex; align-items: center;
+            gap: 0.5rem; justify-content: center;
+            margin-bottom: 2.5rem;
+        }
+        .hero-brand .brand-icon {
+            width: 44px; height: 44px;
+            background: rgba(254,255,214,0.18);
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            border: 1px solid rgba(254,255,214,0.25);
+        }
+
+        .hero-avatar {
+            width: 88px; height: 88px;
+            border-radius: 50%;
+            background: rgba(254,255,214,0.12);
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 1.5rem;
+            border: 2px solid rgba(254,255,214,0.22);
+            box-shadow: 0 0 0 8px rgba(254,255,214,0.05);
+        }
+
+        .hero-headline {
+            color: #FEFFD6;
+            font-size: 1.55rem;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            margin-bottom: 0.5rem;
+        }
+        .hero-sub {
+            color: rgba(254,255,214,0.68);
+            font-size: 0.88rem;
+            line-height: 1.65;
+            margin-bottom: 2.25rem;
+        }
+
+        /* Portal role cards */
+        .portal-cards { display: flex; flex-direction: column; gap: 0.65rem; width: 100%; }
+        .portal-card {
+            display: flex; align-items: center; gap: 0.85rem;
+            padding: 0.75rem 1.1rem;
+            border-radius: 12px;
+            background: rgba(254,255,214,0.09);
+            border: 1px solid rgba(254,255,214,0.16);
+            backdrop-filter: blur(8px);
+            transition: all 0.2s ease;
+            text-align: left;
+            cursor: default;
+        }
+        .portal-card:hover {
+            background: rgba(254,255,214,0.15);
+            border-color: rgba(254,255,214,0.28);
+            transform: translateX(4px);
+        }
+        .portal-icon {
+            width: 36px; height: 36px;
+            border-radius: 9px;
+            background: rgba(254,255,214,0.14);
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+            font-size: 1rem;
+            color: #FEFFD6;
+            border: 1px solid rgba(254,255,214,0.18);
+        }
+        .portal-name {
+            font-size: 0.83rem;
+            font-weight: 700;
+            color: rgba(254,255,214,0.92);
+            margin-bottom: 0.05rem;
+        }
+        .portal-desc {
+            font-size: 0.72rem;
+            color: rgba(254,255,214,0.50);
+            margin: 0;
+        }
+
+        /* AI badge */
+        .ai-badge {
+            display: inline-flex; align-items: center; gap: 0.35rem;
+            padding: 0.35rem 0.85rem;
+            border-radius: 50px;
+            background: rgba(254,255,214,0.10);
+            border: 1px solid rgba(254,255,214,0.18);
+            color: rgba(254,255,214,0.75);
+            font-size: 0.72rem; font-weight: 600;
+            letter-spacing: 0.02em;
+            margin-top: 2rem;
+        }
+
+        /* ── Right form panel ─────────────────────────────── */
+        .auth-form-panel {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem 1.5rem;
+            background: var(--bg-page);
+        }
+        .login-box {
+            width: 100%;
+            max-width: 440px;
+        }
+
+        /* Form card icon */
+        .form-icon-wrap {
+            width: 60px; height: 60px;
+            border-radius: 16px;
+            background: linear-gradient(135deg, var(--deep-teal) 0%, var(--teal) 100%);
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 1.25rem;
+            box-shadow: 0 8px 24px rgba(45,139,123,0.28);
+        }
+
+        .login-title {
+            font-size: 1.75rem;
+            font-weight: 900;
+            color: var(--text-primary);
+            letter-spacing: -0.04em;
+            margin-bottom: 0.35rem;
+        }
+        .login-sub {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 0;
+        }
+
+        /* Inputs */
+        .field-group { margin-bottom: 1.1rem; }
+        .field-label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            display: flex; align-items: center; gap: 0.35rem;
+            margin-bottom: 0.45rem;
+        }
+        .input-wrap { position: relative; }
+        .input-wrap .field-icon {
+            position: absolute; left: 0.9rem; top: 50%;
+            transform: translateY(-50%);
+            color: var(--teal); font-size: 0.95rem;
+            pointer-events: none; z-index: 4;
+        }
+        .input-wrap .form-control {
+            padding-left: 2.6rem;
+            border: 1.5px solid var(--border);
+            border-radius: 10px;
+            background: rgba(255,255,255,0.85);
+            color: var(--text-primary);
+            font-size: 0.9rem;
+            height: 46px;
+            transition: all 0.2s ease;
+        }
+        .input-wrap .form-control:focus {
+            border-color: var(--teal);
+            box-shadow: 0 0 0 3px rgba(91,174,160,0.15);
+            background: #fff;
+            outline: none;
+        }
+        .input-wrap .form-control.is-invalid {
+            border-color: #e74c3c;
+        }
+        .toggle-pw {
+            position: absolute; right: 0.9rem; top: 50%;
+            transform: translateY(-50%);
+            background: none; border: none; padding: 0;
+            color: var(--teal); cursor: pointer; font-size: 0.95rem; z-index: 5;
+        }
+        .toggle-pw:hover { color: var(--deep-teal); }
+
+        /* Error list */
+        .errorlist { list-style: none; padding: 0; margin: 0.25rem 0 0; }
+        .errorlist li {
+            font-size: 0.76rem; color: #c0392b; font-weight: 500;
+            display: flex; align-items: center; gap: 0.3rem;
+        }
+        .errorlist li::before { content: '•'; }
+
+        /* Submit button */
+        .btn-signin {
+            width: 100%;
+            height: 48px;
+            border: none;
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--deep-teal) 0%, var(--teal) 100%);
+            color: #fff;
+            font-size: 0.95rem;
+            font-weight: 700;
+            letter-spacing: 0.01em;
+            box-shadow: 0 6px 20px rgba(45,139,123,0.30);
+            transition: all 0.25s ease;
+            display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+            cursor: pointer;
+        }
+        .btn-signin:hover:not(:disabled) {
+            background: linear-gradient(135deg, #1F6B5C 0%, var(--deep-teal) 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 28px rgba(45,139,123,0.40);
+            color: #fff;
+        }
+        .btn-signin:disabled { opacity: 0.75; cursor: not-allowed; transform: none; }
+
+        /* Register link */
+        .register-link-btn {
+            width: 100%;
+            height: 46px;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            background: transparent;
+            color: var(--deep-teal);
+            font-size: 0.9rem; font-weight: 600;
+            display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+            transition: all 0.2s ease;
+            text-decoration: none;
+        }
+        .register-link-btn:hover {
+            background: rgba(91,174,160,0.08);
+            border-color: var(--teal);
+            color: var(--deep-teal);
+        }
+
+        /* Divider */
+        .or-divider {
+            display: flex; align-items: center; gap: 0.75rem;
+            margin: 1.1rem 0;
+        }
+        .or-divider hr { flex: 1; border-color: var(--border); margin: 0; }
+        .or-divider span {
+            font-size: 0.75rem; color: var(--text-muted);
+            white-space: nowrap; font-weight: 500;
+        }
+
+        /* Remember me */
+        .remember-row {
+            display: flex; align-items: center; gap: 0.5rem;
+            margin-bottom: 1.25rem;
+        }
+        .remember-row .form-check-input {
+            width: 16px; height: 16px;
+            border-color: var(--teal);
+            cursor: pointer;
+        }
+        .remember-row .form-check-input:checked {
+            background-color: var(--deep-teal);
+            border-color: var(--deep-teal);
+        }
+        .remember-row label {
+            font-size: 0.82rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+            margin: 0;
+        }
+        .forgot-link {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--teal);
+        }
+        .forgot-link:hover { color: var(--deep-teal); text-decoration: underline; }
+
+        /* Alert overrides */
+        .alert { font-size: 0.85rem; border-radius: 10px; }
+
+        /* Responsive */
+        @media (max-width: 991px) {
+            .auth-hero { display: none !important; }
+            .auth-form-panel { padding: 2rem 1rem; }
+        }
+    </style>
+</head>
+<body>
+{% include 'components/navbar.html' %}
+
+<div class="auth-shell">
+
+    <!-- ═══ LEFT HERO PANEL ═══ -->
+    <div class="auth-hero d-none d-lg-flex">
+        <!-- Decorative dots -->
+        <div class="hero-dot" style="width:12px;height:12px;top:18%;left:12%;opacity:0.6;"></div>
+        <div class="hero-dot" style="width:7px;height:7px;top:35%;right:18%;opacity:0.4;"></div>
+        <div class="hero-dot" style="width:18px;height:18px;bottom:25%;left:20%;opacity:0.3;"></div>
+        <div class="hero-dot" style="width:9px;height:9px;bottom:40%;right:12%;opacity:0.5;"></div>
+
+        <div class="hero-content">
+            <!-- Brand -->
+            <div class="hero-brand">
+                <div class="brand-icon">
+                    <i class="bi bi-briefcase-fill" style="font-size:1.2rem;color:#FEFFD6;"></i>
+                </div>
+                SmartRecruit
+            </div>
+
+            <!-- Avatar -->
+            <div class="hero-avatar">
+                <i class="bi bi-person-check" style="font-size:2.4rem;color:#FEFFD6;"></i>
+            </div>
+
+            <h2 class="hero-headline">Welcome Back!</h2>
+            <p class="hero-sub">
+                Sign in to continue your<br>AI-powered hiring journey
+            </p>
+
+            <!-- Portal role cards -->
+            <p style="font-size:0.72rem;color:rgba(254,255,214,0.45);font-weight:600;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.75rem;">Access your portal</p>
+            <div class="portal-cards">
+                <div class="portal-card">
+                    <div class="portal-icon"><i class="bi bi-person-circle"></i></div>
+                    <div>
+                        <p class="portal-name">Candidate</p>
+                        <p class="portal-desc">Browse jobs &amp; track applications</p>
+                    </div>
+                </div>
+                <div class="portal-card">
+                    <div class="portal-icon"><i class="bi bi-people-fill"></i></div>
+                    <div>
+                        <p class="portal-name">Recruiter / Hiring Manager</p>
+                        <p class="portal-desc">Post jobs, screen &amp; interview candidates</p>
+                    </div>
+                </div>
+                <div class="portal-card">
+                    <div class="portal-icon"><i class="bi bi-shield-lock-fill"></i></div>
+                    <div>
+                        <p class="portal-name">Administrator</p>
+                        <p class="portal-desc">Manage platform, users &amp; analytics</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="ai-badge">
+                <i class="bi bi-stars"></i>
+                Powered by Groq AI · Gemini Intelligence
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ RIGHT FORM PANEL ═══ -->
+    <div class="auth-form-panel">
+        <div class="login-box">
+
+            <!-- Mobile brand -->
+            <div class="d-lg-none text-center mb-4">
+                <span style="font-size:1.5rem;font-weight:900;color:var(--deep-teal);display:inline-flex;align-items:center;gap:0.4rem;letter-spacing:-0.04em;">
+                    <i class="bi bi-briefcase-fill"></i>SmartRecruit
+                </span>
+            </div>
+
+            <!-- Card header -->
+            <div class="text-center mb-4">
+                <div class="form-icon-wrap">
+                    <i class="bi bi-box-arrow-in-right" style="font-size:1.6rem;color:#fff;"></i>
+                </div>
+                <h1 class="login-title">Sign In</h1>
+                <p class="login-sub">Enter your credentials to access your dashboard</p>
+            </div>
+
+            <!-- Flash messages -->
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show py-2 mb-3" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger py-2 mb-3" role="alert">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+                </div>
+            {% endif %}
+
+            <!-- Login form -->
+            <form method="post" id="loginForm" novalidate>
+                {% csrf_token %}
+
+                <!-- Username -->
+                <div class="field-group">
+                    <label for="id_username" class="field-label">
+                        <i class="bi bi-person"></i> Username
+                    </label>
+                    <div class="input-wrap">
+                        <i class="bi bi-person field-icon"></i>
+                        <input type="text"
+                               name="username"
+                               id="id_username"
+                               class="form-control {% if form.username.errors %}is-invalid{% endif %}"
+                               placeholder="Enter your username"
+                               value="{{ form.username.value|default:'' }}"
+                               autocomplete="username"
+                               autofocus
+                               required>
+                    </div>
+                    {% if form.username.errors %}
+                        <ul class="errorlist">{% for e in form.username.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+                    {% endif %}
+                </div>
+
+                <!-- Password -->
+                <div class="field-group">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <label for="id_password" class="field-label mb-0">
+                            <i class="bi bi-lock"></i> Password
+                        </label>
+                        <a href="{% url 'password_reset' %}" class="forgot-link">Forgot password?</a>
+                    </div>
+                    <div class="input-wrap">
+                        <i class="bi bi-lock field-icon"></i>
+                        <input type="password"
+                               name="password"
+                               id="id_password"
+                               class="form-control {% if form.password.errors %}is-invalid{% endif %}"
+                               placeholder="Enter your password"
+                               autocomplete="current-password"
+                               required>
+                        <button type="button" class="toggle-pw" id="togglePwBtn" aria-label="Toggle password visibility">
+                            <i class="bi bi-eye-slash" id="togglePwIcon"></i>
+                        </button>
+                    </div>
+                    {% if form.password.errors %}
+                        <ul class="errorlist">{% for e in form.password.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+                    {% endif %}
+                </div>
+
+                <!-- Remember me -->
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div class="remember-row">
+                        <input class="form-check-input" type="checkbox"
+                               name="remember_me" id="rememberMe">
+                        <label for="rememberMe">Keep me signed in for 2 weeks</label>
+                    </div>
+                </div>
+
+                <!-- Submit -->
+                <button type="submit" class="btn-signin mb-3" id="loginBtn">
+                    <i class="bi bi-box-arrow-in-right"></i>
+                    Sign In
+                </button>
+
+                <!-- Divider -->
+                <div class="or-divider">
+                    <hr><span>New to SmartRecruit?</span><hr>
+                </div>
+
+                <!-- Register -->
+                <a href="{% url 'register' %}" class="register-link-btn">
+                    <i class="bi bi-rocket-takeoff"></i>
+                    Create Free Account
+                </a>
+
+            </form>
+
+            <!-- Footer note -->
+            <p class="text-center mt-4" style="font-size:0.75rem;color:var(--text-muted);">
+                By signing in you agree to SmartRecruit's
+                <a href="#" style="color:var(--teal);font-weight:500;">Terms</a> &amp;
+                <a href="#" style="color:var(--teal);font-weight:500;">Privacy Policy</a>
+            </p>
+
+        </div>
+    </div><!-- /auth-form-panel -->
+</div><!-- /auth-shell -->
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // Password toggle
+    const pwInput  = document.getElementById('id_password');
+    const pwIcon   = document.getElementById('togglePwIcon');
+    document.getElementById('togglePwBtn').addEventListener('click', function () {
+        const isHidden = pwInput.type === 'password';
+        pwInput.type   = isHidden ? 'text' : 'password';
+        pwIcon.className = isHidden ? 'bi bi-eye' : 'bi bi-eye-slash';
+    });
+
+    // Spinner on submit
+    document.getElementById('loginForm').addEventListener('submit', function () {
+        const btn = document.getElementById('loginBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Signing In…';
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,266 @@
+{% extends 'base.html' %}
+
+{% block title %}System Configuration – SmartRecruit Admin{% endblock %}
+
+{% block content %}
+<style>
+    .config-card {
+        background: rgba(128, 128, 128, 0.03);
+        border: 1px solid rgba(128, 128, 128, 0.15);
+        border-radius: 1rem;
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        overflow: hidden;
+        position: relative;
+    }
+    
+    .config-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+        border-color: rgba(128, 128, 128, 0.25);
+    }
+    
+    .config-card::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0; height: 3px;
+        background: linear-gradient(90deg, var(--accent), transparent);
+        opacity: 0.8;
+    }
+
+    .config-card.danger-card::before {
+        background: linear-gradient(90deg, #dc3545, transparent);
+    }
+
+    .section-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(128, 128, 128, 0.1);
+        font-size: 1.25rem;
+        color: var(--accent);
+        margin-bottom: 1rem;
+    }
+
+    .danger-card .section-icon {
+        color: #dc3545;
+        background: rgba(220, 53, 69, 0.1);
+    }
+
+    .form-control {
+        background-color: rgba(128, 128, 128, 0.05);
+        border: 1px solid rgba(128, 128, 128, 0.2);
+        color: var(--text-primary);
+        border-radius: 0.5rem;
+        padding: 0.75rem 1rem;
+        transition: all 0.2s ease;
+    }
+
+    .form-control:focus {
+        background-color: rgba(128, 128, 128, 0.08);
+        border-color: var(--accent);
+        box-shadow: 0 0 0 0.25rem rgba(var(--accent-rgb), 0.25);
+        color: var(--text-primary);
+    }
+
+    .form-control::placeholder {
+        color: rgba(128, 128, 128, 0.6);
+    }
+
+    .custom-switch-wrapper {
+        display: flex;
+        align-items: flex-start;
+        gap: 1rem;
+        padding: 1rem;
+        border-radius: 0.75rem;
+        background: rgba(128, 128, 128, 0.05);
+        border: 1px solid rgba(128, 128, 128, 0.15);
+        transition: all 0.2s ease;
+    }
+    
+    .custom-switch-wrapper:hover {
+        background: rgba(128, 128, 128, 0.08);
+        border-color: rgba(128, 128, 128, 0.25);
+    }
+
+    .form-check-input {
+        width: 3em !important;
+        height: 1.5em !important;
+        margin-top: 0.25em;
+        background-color: rgba(128, 128, 128, 0.2);
+        border-color: rgba(128, 128, 128, 0.3);
+        cursor: pointer;
+    }
+
+    .form-check-input:checked {
+        background-color: var(--accent);
+        border-color: var(--accent);
+    }
+    
+    .danger-switch .form-check-input:checked {
+        background-color: #dc3545;
+        border-color: #dc3545;
+    }
+
+    .action-bar {
+        position: sticky;
+        bottom: 2rem;
+        background: rgba(128, 128, 128, 0.05);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        padding: 1rem 1.5rem;
+        border-radius: 1rem;
+        border: 1px solid rgba(128, 128, 128, 0.15);
+        z-index: 100;
+        box-shadow: 0 -4px 24px rgba(0,0,0,0.1);
+    }
+
+    .save-btn {
+        padding: 0.75rem 2rem;
+        border-radius: 0.5rem;
+        font-weight: 500;
+        letter-spacing: 0.5px;
+        background: linear-gradient(135deg, var(--accent), #2b7a78);
+        border: none;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        transition: all 0.3s ease;
+    }
+
+    .save-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+    }
+</style>
+
+<div class="animate-fade-in">
+
+    <!-- Page Header -->
+    <div class="page-header mb-5">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+            <div>
+                <h1 class="mb-1 fw-bold" style="font-size:1.75rem; letter-spacing: -0.5px;">
+                    <i class="bi bi-sliders text-accent me-2"></i> System Configuration
+                </h1>
+                <p class="mb-0 text-secondary" style="font-size:0.95rem;">
+                    Manage global platform parameters, maintenance states, and security toggles.
+                </p>
+            </div>
+            <div style="position: relative; z-index: 10;">
+                <a href="{% url 'admin_dashboard' %}" class="btn btn-outline-secondary d-flex align-items-center gap-2" style="border-radius: 0.5rem;">
+                    <i class="bi bi-arrow-left"></i> Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Configuration Form -->
+    <form method="post" novalidate>
+        {% csrf_token %}
+        <div class="row g-4">
+            
+            <!-- General Settings Column -->
+            <div class="col-lg-7">
+                <div class="config-card p-4 h-100">
+                    <div class="d-flex align-items-center gap-3 mb-4">
+                        <div class="section-icon mb-0">
+                            <i class="bi bi-info-circle"></i>
+                        </div>
+                        <h5 class="fw-bold mb-0" style="color: var(--text-primary);">General Information</h5>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="{{ form.site_name.id_for_label }}" class="form-label small text-uppercase fw-bold tracking-wide" style="color: var(--text-secondary);">
+                            Platform Name
+                        </label>
+                        {{ form.site_name }}
+                        {% if form.site_name.errors %}
+                            <div class="invalid-feedback d-block mt-2">
+                                {% for error in form.site_name.errors %}
+                                    <i class="bi bi-exclamation-triangle-fill me-1"></i> {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <div class="form-text mt-2" style="color: var(--text-secondary);">
+                            The main name of the platform displayed in the header and emails.
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.support_email.id_for_label }}" class="form-label small text-uppercase fw-bold tracking-wide" style="color: var(--text-secondary);">
+                            Support Contact Email
+                        </label>
+                        {{ form.support_email }}
+                        {% if form.support_email.errors %}
+                            <div class="invalid-feedback d-block mt-2">
+                                {% for error in form.support_email.errors %}
+                                    <i class="bi bi-exclamation-triangle-fill me-1"></i> {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <div class="form-text mt-2" style="color: var(--text-secondary);">
+                            Email address where users can send support requests or inquiries.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Access Control Column -->
+            <div class="col-lg-5">
+                <div class="config-card danger-card p-4 h-100">
+                    <div class="d-flex align-items-center gap-3 mb-4">
+                        <div class="section-icon mb-0">
+                            <i class="bi bi-shield-lock"></i>
+                        </div>
+                        <h5 class="fw-bold mb-0" style="color: var(--text-primary);">Access & Security</h5>
+                    </div>
+
+                    <div class="custom-switch-wrapper mb-3">
+                        <div class="pt-1" style="margin-left: 0.5rem;">
+                            {{ form.allow_new_registrations }}
+                        </div>
+                        <div>
+                            <label class="form-check-label fw-bold mb-1" for="{{ form.allow_new_registrations.id_for_label }}" style="cursor: pointer; color: var(--text-primary);">
+                                Allow New Registrations
+                            </label>
+                            <p class="small mb-0 lh-sm" style="color: var(--text-secondary);">
+                                When disabled, the signup page will be hidden and new users cannot create accounts.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="custom-switch-wrapper danger-switch">
+                        <div class="pt-1" style="margin-left: 0.5rem;">
+                            {{ form.maintenance_mode }}
+                        </div>
+                        <div>
+                            <label class="form-check-label text-danger fw-bold mb-1" for="{{ form.maintenance_mode.id_for_label }}" style="cursor: pointer;">
+                                Enable Maintenance Mode
+                            </label>
+                            <p class="small mb-0 lh-sm" style="color: var(--text-secondary);">
+                                Activating this will lock out all non-admin users. Only use during critical system updates.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Bar -->
+            <div class="col-12">
+                <div class="action-bar d-flex justify-content-between align-items-center flex-wrap gap-3 mt-3">
+                    <span class="small" style="color: var(--text-secondary);">
+                        <i class="bi bi-info-circle me-1"></i> Changes will take effect immediately across the platform.
+                    </span>
+                    <button type="submit" class="btn btn-primary save-btn d-flex align-items-center gap-2 text-white">
+                        <i class="bi bi-cloud-arrow-up-fill"></i> Save Configuration
+                    </button>
+                </div>
+            </div>
+            
+        </div>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,149 @@
+{% extends 'base.html' %}
+
+{% block title %}Browse Jobs - SmartRecruit{% endblock %}
+
+{% block content %}
+<div class="page-header animate-fade-in d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+    <div>
+        <h2 class="fw-bold m-0" style="color: var(--cream);">Browse Jobs</h2>
+        <p class="mb-0" style="color: rgba(254,255,214,0.85);">Discover your next opportunity</p>
+    </div>
+    {% if user.is_authenticated and user.role in 'RECRUITER,COMPANY' %}
+    <a href="{% url 'job_create' %}" class="btn btn-primary-custom fw-bold shadow-teal">
+        <i class="bi bi-plus-lg me-1"></i> Post a Job
+    </a>
+    {% endif %}
+</div>
+
+<div class="row g-4 animate-children">
+    <!-- Sidebar Filters -->
+    <div class="col-lg-3">
+        <div class="card border-0 shadow-sm bg-white sticky-top" style="top: 90px;">
+            <div class="card-header bg-white border-bottom border-mint py-3">
+                <h6 class="fw-bold m-0 text-teal"><i class="bi bi-funnel me-2"></i>Filters</h6>
+            </div>
+            <div class="card-body p-4">
+                <form method="get" action="{% url 'job_list' %}">
+                    <div class="mb-3">
+                        <label class="form-label fw-600 small text-deep-teal">Search</label>
+                        <div class="input-group">
+                            <span class="input-group-text border-mint bg-white text-teal"><i class="bi bi-search"></i></span>
+                            <input type="text" name="q" class="form-control border-mint border-start-0"
+                                   placeholder="Job title..." value="{{ request.GET.q }}">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-600 small text-deep-teal">Category</label>
+                        <select name="category" class="form-select border-mint">
+                            <option value="">All Categories</option>
+                            {% for cat in categories %}
+                                <option value="{{ cat.id }}" {% if request.GET.category == cat.id|stringformat:"s" %}selected{% endif %}>{{ cat.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-600 small text-deep-teal">Work Model</label>
+                        <select name="work_model" class="form-select border-mint">
+                            <option value="">Any</option>
+                            <option value="ONSITE" {% if request.GET.work_model == 'ONSITE' %}selected{% endif %}>On-site</option>
+                            <option value="REMOTE" {% if request.GET.work_model == 'REMOTE' %}selected{% endif %}>Remote</option>
+                            <option value="HYBRID" {% if request.GET.work_model == 'HYBRID' %}selected{% endif %}>Hybrid</option>
+                        </select>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary-custom fw-bold shadow-teal">Apply Filters</button>
+                        <a href="{% url 'job_list' %}" class="btn btn-outline-secondary fw-600">Clear All</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Job Listings -->
+    <div class="col-lg-9">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="fw-bold text-dark m-0">Latest Jobs</h5>
+            <span class="badge badge-cream text-teal border-mint fw-600 px-3 py-2">{{ page_obj.paginator.count }} job{{ page_obj.paginator.count|pluralize }} found</span>
+        </div>
+
+        {% if jobs %}
+            {% for job in jobs %}
+            <div class="card bg-white border-0 shadow-sm mb-3 hover-lift">
+                <div class="card-body p-4">
+                    <div class="row align-items-center g-3">
+                        <!-- Company Logo -->
+                        <div class="col-auto">
+                            {% if job.company.logo %}
+                                <img src="{{ job.company.logo.url }}" class="rounded-circle shadow-sm" style="width: 56px; height: 56px; object-fit: cover;">
+                            {% else %}
+                                <div class="rounded-circle d-flex align-items-center justify-content-center fw-bold fs-4 shadow-sm"
+                                     style="width: 56px; height: 56px; background: var(--mint-light); color: var(--teal);">
+                                    {{ job.company.name|first|upper }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Job Info -->
+                        <div class="col">
+                            <h5 class="fw-bold text-dark mb-1">
+                                <a href="{% url 'job_detail' job.id %}" class="text-decoration-none text-dark">{{ job.title }}</a>
+                            </h5>
+                            <p class="mb-2 fw-600" style="color: var(--teal); font-size: 0.9rem;">{{ job.company.name }}</p>
+                            <div class="d-flex flex-wrap gap-3 text-muted small">
+                                <span><i class="bi bi-geo-alt text-teal me-1"></i>{{ job.location|default:"Not specified" }}</span>
+                                <span><i class="bi bi-briefcase text-teal me-1"></i>{{ job.get_work_model_display }}</span>
+                                <span><i class="bi bi-cash text-teal me-1"></i>{% if job.salary_min %}₹{{ job.salary_min|floatformat:0 }} – ₹{{ job.salary_max|floatformat:0 }}{% else %}Confidential{% endif %}</span>
+                            </div>
+                        </div>
+
+                        <!-- Action -->
+                        <div class="col-md-3 text-md-end">
+                            <a href="{% url 'job_detail' job.id %}" class="btn btn-sm btn-outline-teal fw-600 mb-2 w-100">View Details</a>
+                            <p class="text-muted small mb-0">{{ job.created_at|timesince }} ago</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+
+            <!-- Pagination -->
+            {% if is_paginated %}
+            <nav class="mt-4">
+                <ul class="pagination justify-content-center gap-1">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item"><a class="page-link border-mint text-teal rounded" href="?page={{ page_obj.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">Previous</a></li>
+                    {% endif %}
+                    <li class="page-item active"><span class="page-link rounded" style="background: var(--teal); border-color: var(--teal);">{{ page_obj.number }}</span></li>
+                    {% if page_obj.has_next %}
+                        <li class="page-item"><a class="page-link border-mint text-teal rounded" href="?page={{ page_obj.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">Next</a></li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+
+        {% else %}
+            <div class="card bg-white border-0 shadow-sm text-center py-5">
+                <div class="card-body">
+                    <div class="mx-auto mb-3 d-flex align-items-center justify-content-center rounded-circle"
+                         style="width: 64px; height: 64px; background: var(--mint-light); color: var(--teal);">
+                        <i class="bi bi-search fs-2"></i>
+                    </div>
+                    <h5 class="fw-bold text-dark mb-1">No Jobs Found</h5>
+                    <p class="text-muted small">Try adjusting your filters or search terms.</p>
+                    <a href="{% url 'job_list' %}" class="btn btn-sm btn-outline-teal fw-600">Clear Filters</a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+    .hover-lift { transition: transform 0.2s ease, box-shadow 0.2s ease; }
+    .hover-lift:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(45, 139, 123, 0.1) !important; }
+    .btn-outline-teal { border-color: var(--teal); color: var(--teal); }
+    .btn-outline-teal:hover { background: var(--teal); color: white; }
+</style>
+{% endblock %}

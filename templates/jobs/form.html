@@ -1,0 +1,263 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if object %}Edit Job{% else %}Post a New Job{% endif %} - SmartRecruit{% endblock %}
+
+{% block extra_css %}
+<style>
+  .job-form-card {
+    background: #ffffff;
+    border: 1px solid var(--border, rgba(91, 174, 160, 0.35));
+    border-radius: 20px;
+    box-shadow: 0 12px 36px rgba(45, 139, 123, 0.10);
+  }
+  .form-section-title {
+    color: var(--deep-teal, #2D8B7B);
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .form-label-custom {
+    color: #1e293b;
+    font-weight: 600;
+    font-size: 0.875rem;
+    margin-bottom: 0.35rem;
+    display: block;
+  }
+  .job-form-card .form-control, 
+  .job-form-card .form-select {
+    border: 1px solid #cbd5e1;
+    border-radius: 10px;
+    padding: 0.65rem 0.9rem;
+    font-size: 0.95rem;
+    color: #0f172a;
+    background-color: #f8fafc;
+    transition: all 0.2s ease;
+  }
+  .job-form-card .form-control:focus, 
+  .job-form-card .form-select:focus {
+    background-color: #ffffff;
+    border-color: var(--deep-teal, #2D8B7B);
+    box-shadow: 0 0 0 3px rgba(45, 139, 123, 0.18);
+    color: #0f172a;
+  }
+  .form-help-hint {
+    color: #64748b;
+    font-size: 0.78rem;
+    margin-top: 0.25rem;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4" style="max-width: 950px;">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+        <div>
+            <h2 class="fw-bold mb-1" style="color: var(--text-primary, #1A4A42);">
+                {% if object %}<i class="bi bi-pencil-square me-2"></i>Edit Job Posting{% else %}<i class="bi bi-plus-circle-fill me-2" style="color: var(--deep-teal, #2D8B7B);"></i>Post a New Job{% endif %}
+            </h2>
+            <p class="text-secondary small mb-0">Fill in the job requirements, details, and candidate specifications below.</p>
+        </div>
+        <a href="{% url 'company_job_list' %}" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+            <i class="bi bi-arrow-left me-1"></i> Back to Jobs List
+        </a>
+    </div>
+
+    <!-- Main Form Card -->
+    <div class="card job-form-card p-4 p-md-5">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show rounded-3 mb-4" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        {% if form.errors %}
+            <div class="alert alert-danger rounded-3 mb-4 shadow-sm">
+                <div class="fw-bold mb-1"><i class="bi bi-exclamation-triangle-fill me-2"></i>Please correct the following issues before saving:</div>
+                <ul class="mb-0 ps-3 small">
+                    {% for field in form %}
+                        {% for error in field.errors %}
+                            <li><strong>{{ field.label }}:</strong> {{ error }}</li>
+                        {% endfor %}
+                    {% endfor %}
+                    {% for error in form.non_field_errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+
+        <form method="post" id="jobForm">
+            {% csrf_token %}
+
+            <!-- Section 1: Basic Information -->
+            <div class="mb-4 pb-4 border-bottom">
+                <div class="form-section-title">
+                    <i class="bi bi-info-circle-fill"></i> Basic Position Information
+                </div>
+                <div class="row g-3">
+                    <div class="col-md-8">
+                        <label class="form-label-custom">Job Title <span class="text-danger">*</span></label>
+                        {{ form.title }}
+                        {% if form.title.errors %}
+                            <div class="text-danger small mt-1">{{ form.title.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label-custom">Number of Openings <span class="text-danger">*</span></label>
+                        {{ form.openings }}
+                        <div class="form-help-hint">Available vacant seats for this role</div>
+                        {% if form.openings.errors %}
+                            <div class="text-danger small mt-1">{{ form.openings.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label-custom">Job Category</label>
+                        {{ form.category_input }}
+                        <div class="form-help-hint">e.g. Software Engineering, Machine Learning, Product Management</div>
+                        {% if form.category_input.errors %}
+                            <div class="text-danger small mt-1">{{ form.category_input.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label-custom">Job Location</label>
+                        {{ form.location }}
+                        <div class="form-help-hint">City, Country or "Remote"</div>
+                        {% if form.location.errors %}
+                            <div class="text-danger small mt-1">{{ form.location.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 2: Work Structure & Candidate Requirements -->
+            <div class="mb-4 pb-4 border-bottom">
+                <div class="form-section-title">
+                    <i class="bi bi-briefcase-fill"></i> Work Structure & Requirements
+                </div>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label-custom">Employment Type</label>
+                        {{ form.employment_type }}
+                        {% if form.employment_type.errors %}
+                            <div class="text-danger small mt-1">{{ form.employment_type.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label-custom">Work Model</label>
+                        {{ form.work_model }}
+                        {% if form.work_model.errors %}
+                            <div class="text-danger small mt-1">{{ form.work_model.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label-custom">Minimum Experience Required (Years)</label>
+                        {{ form.experience_years }}
+                        <div class="form-help-hint">Enter 0 for entry-level / fresher roles</div>
+                        {% if form.experience_years.errors %}
+                            <div class="text-danger small mt-1">{{ form.experience_years.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label-custom">Education Qualification</label>
+                        {{ form.education }}
+                        <div class="form-help-hint">e.g. Bachelor's Degree in CS, B.Tech, Master's</div>
+                        {% if form.education.errors %}
+                            <div class="text-danger small mt-1">{{ form.education.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 3: Compensation & Timeline -->
+            <div class="mb-4 pb-4 border-bottom">
+                <div class="form-section-title">
+                    <i class="bi bi-cash-stack"></i> Compensation & Application Timeline
+                </div>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label-custom">Minimum Annual Salary (₹)</label>
+                        {{ form.salary_min }}
+                        {% if form.salary_min.errors %}
+                            <div class="text-danger small mt-1">{{ form.salary_min.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label-custom">Maximum Annual Salary (₹)</label>
+                        {{ form.salary_max }}
+                        {% if form.salary_max.errors %}
+                            <div class="text-danger small mt-1">{{ form.salary_max.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label-custom">Application Deadline</label>
+                        {{ form.deadline }}
+                        <div class="form-help-hint">Last date for candidates to submit applications</div>
+                        {% if form.deadline.errors %}
+                            <div class="text-danger small mt-1">{{ form.deadline.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 4: Technical Skills & Competencies -->
+            <div class="mb-4 pb-4 border-bottom">
+                <div class="form-section-title">
+                    <i class="bi bi-stars"></i> Skill Matching & Criteria
+                </div>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label-custom">Required Skills</label>
+                        {{ form.skills_input }}
+                        <div class="form-help-hint">Comma-separated key skills used for AI match scoring (e.g. Python, Django, SQL)</div>
+                        {% if form.skills_input.errors %}
+                            <div class="text-danger small mt-1">{{ form.skills_input.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label-custom">Preferred / Good-to-have Skills</label>
+                        {{ form.preferred_skills_input }}
+                        <div class="form-help-hint">Bonus skills (e.g. Docker, AWS, Redis, React)</div>
+                        {% if form.preferred_skills_input.errors %}
+                            <div class="text-danger small mt-1">{{ form.preferred_skills_input.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 5: Full Job Description -->
+            <div class="mb-4">
+                <div class="form-section-title">
+                    <i class="bi bi-file-text-fill"></i> Job Description & Overview
+                </div>
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label class="form-label-custom">Full Job Description <span class="text-danger">*</span></label>
+                        {{ form.description }}
+                        <div class="form-help-hint">Detailed breakdown of responsibilities, key deliverables, company perks, and team expectations.</div>
+                        {% if form.description.errors %}
+                            <div class="text-danger small mt-1">{{ form.description.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form Action Footer -->
+            <div class="d-flex justify-content-end align-items-center gap-3 pt-3 border-top">
+                <a href="{% url 'company_job_list' %}" class="btn btn-outline-secondary px-4">Cancel</a>
+                
+                <button type="submit" name="action" value="publish" class="btn btn-success px-5 fw-bold" style="background-color: var(--deep-teal, #2D8B7B); border-color: var(--deep-teal, #2D8B7B);">
+                    <i class="bi bi-cloud-arrow-up me-2"></i>{% if object %}Update Job Posting{% else %}Post Job for Approval{% endif %}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+

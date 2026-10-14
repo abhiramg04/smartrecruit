@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+
+{% block title %}Assign Assessment - SmartRecruit{% endblock %}
+
+{% block content %}
+<style>
+    .assign-card {
+        background: #ffffff;
+        border: 1px solid rgba(91, 174, 160, 0.35);
+        border-radius: 16px;
+        box-shadow: 0 8px 24px rgba(45, 139, 123, 0.10);
+    }
+    .assign-card .form-label {
+        color: #1A4A42 !important;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+    .assign-card .form-select {
+        background-color: #ffffff !important;
+        color: #1A4A42 !important;
+        border: 1.5px solid rgba(91, 174, 160, 0.4) !important;
+        font-weight: 500;
+        padding: 0.65rem 0.9rem;
+    }
+    .assign-card .form-select option {
+        background-color: #ffffff !important;
+        color: #1A4A42 !important;
+    }
+</style>
+
+<div class="page-header animate-fade-in d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+    <div>
+        <h2 class="fw-800 m-0" style="color: #1F6B5C !important;">Assign Technical Assessment</h2>
+        <p class="mb-0 fw-600" style="color: #3D7A70 !important;">Assign an assessment to {{ application.candidate.user.get_full_name }} for {{ application.job.title }}</p>
+    </div>
+    <a href="{% url 'manage_applications' %}" class="btn btn-outline-light btn-sm fw-600 px-3 py-2">
+        <i class="bi bi-arrow-left me-1"></i> Back to Applications
+    </a>
+</div>
+
+<div class="row justify-content-center animate-children">
+    <div class="col-lg-6">
+        <div class="card assign-card p-2">
+            <div class="card-body p-4">
+                <div class="p-3 rounded mb-4" style="background: rgba(45, 139, 123, 0.07); border: 1px solid rgba(91, 174, 160, 0.25);">
+                    <h5 class="fw-800 mb-1" style="color: #1A4A42;">{{ application.candidate.user.get_full_name|default:application.candidate.user.username }}</h5>
+                    <p class="mb-0 small fw-500" style="color: #3D7A70;">Applying for position: <strong style="color: #1A4A42;">{{ application.job.title }}</strong></p>
+                </div>
+
+                {% if form.assessment.field.queryset.exists %}
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-4">
+                        <label for="{{ form.assessment.id_for_label }}" class="form-label">Select Assessment to Assign</label>
+                        {{ form.assessment }}
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100 py-2.5 fw-600">
+                        <i class="bi bi-send-check me-1"></i> Assign Assessment &amp; Notify Candidate
+                    </button>
+                </form>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="bi bi-clipboard-x text-muted" style="font-size: 2.5rem;"></i>
+                    <h6 class="fw-700 mt-3" style="color: #1A4A42;">No Technical Assessments Created</h6>
+                    <p class="small text-muted mb-3" style="color: #3D7A70;">Create an assessment first before assigning it to candidate applications.</p>
+                    <a href="{% url 'assessments:create' %}" class="btn btn-primary fw-600 px-4">
+                        <i class="bi bi-plus-circle me-1"></i> Create New Assessment
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

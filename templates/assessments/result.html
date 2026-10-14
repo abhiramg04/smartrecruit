@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-5">
+    <h2>Assessment Result</h2>
+    <hr>
+    
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card mb-3">
+                <div class="card-header bg-primary text-white">Metrics</div>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item"><strong>Question:</strong> {{ submission.question.title }}</li>
+                    <li class="list-group-item"><strong>Language:</strong> {{ submission.language }}</li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <strong>Test Cases:</strong> 
+                        <span class="badge bg-success rounded-pill">{{ submission.passed_tests }} / {{ submission.total_tests }} Passed</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <strong>AI Code Quality Score:</strong> 
+                        <span class="badge bg-info rounded-pill">{{ submission.ai_score|floatformat:1 }}/100</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <strong>Plagiarism Risk:</strong>
+                        <span class="badge {% if submission.plagiarism_score > 50 %}bg-danger{% elif submission.plagiarism_score > 20 %}bg-warning{% else %}bg-success{% endif %} rounded-pill">
+                            {{ submission.plagiarism_score|floatformat:1 }}%
+                        </span>
+                    </li>
+                    <li class="list-group-item fs-4 d-flex justify-content-between align-items-center">
+                        <strong>Final Score:</strong> 
+                        <span class="text-primary">{{ submission.final_score|floatformat:1 }}/100</span>
+                    </li>
+                </ul>
+            </div>
+            
+            <div class="card">
+                <div class="card-header bg-info text-white">AI Feedback</div>
+                <div class="card-body">
+                    <p class="card-text">{{ submission.ai_feedback|linebreaks }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header bg-secondary text-white">Submitted Code</div>
+                <div class="card-body bg-dark text-light p-0">
+                    <pre class="m-0 p-3" style="max-height: 60vh; overflow-y: auto;"><code>{{ submission.code }}</code></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="mt-4 mb-5">
+        <a href="{% url 'assessments:dashboard' %}" class="btn btn-outline-primary">Back to Dashboard</a>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,623 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Account – SmartRecruit</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="{% static 'css/style.css' %}" rel="stylesheet">
+    <style>
+        /* ── Page-specific overrides ── */
+        body {
+            min-height: 100vh;
+            display: flex;
+            align-items: stretch;
+            overflow-x: hidden;
+        }
+
+        /* Left panel */
+        .auth-left {
+            background: linear-gradient(160deg, var(--deep-teal) 0%, var(--teal) 55%, rgba(143,223,212,0.85) 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 3rem 2.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .auth-left::before {
+            content: '';
+            position: absolute;
+            width: 420px; height: 420px;
+            border-radius: 50%;
+            background: rgba(254,255,214,0.08);
+            top: -100px; right: -100px;
+        }
+        .auth-left::after {
+            content: '';
+            position: absolute;
+            width: 280px; height: 280px;
+            border-radius: 50%;
+            background: rgba(254,255,214,0.06);
+            bottom: -60px; left: -60px;
+        }
+
+        .auth-left-content { position: relative; z-index: 2; text-align: center; }
+
+        .brand-logo {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--cream);
+            letter-spacing: -0.04em;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            justify-content: center;
+            margin-bottom: 2rem;
+        }
+
+        .feature-list { list-style: none; padding: 0; margin: 2rem 0; text-align: left; }
+        .feature-list li {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            color: rgba(254,255,214,0.88);
+            font-size: 0.92rem;
+            font-weight: 500;
+            margin-bottom: 1rem;
+        }
+        .feature-list li .fi {
+            width: 34px; height: 34px;
+            border-radius: 10px;
+            background: rgba(254,255,214,0.15);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1rem;
+            flex-shrink: 0;
+            color: var(--cream);
+        }
+
+        .trust-badges {
+            display: flex;
+            gap: 1.5rem;
+            justify-content: center;
+            margin-top: 2.5rem;
+            flex-wrap: wrap;
+        }
+        .trust-badge {
+            text-align: center;
+            color: rgba(254,255,214,0.75);
+        }
+        .trust-badge .num {
+            display: block;
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: var(--cream);
+            line-height: 1;
+        }
+        .trust-badge .lbl { font-size: 0.72rem; font-weight: 500; }
+
+        /* Right panel */
+        .auth-right {
+            flex: 1;
+            background: var(--bg-page);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem 1.5rem;
+            min-height: 100vh;
+        }
+
+        .register-card {
+            width: 100%;
+            max-width: 520px;
+        }
+
+        .register-card h2 {
+            font-size: 1.75rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            letter-spacing: -0.03em;
+        }
+
+        /* Role Selector */
+        .role-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.6rem;
+        }
+
+        .role-option { display: none; }
+
+        .role-label {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.85rem 0.5rem;
+            border: 2px solid var(--border);
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: var(--transition);
+            background: rgba(255,255,255,0.70);
+            text-align: center;
+            user-select: none;
+        }
+
+        .role-label:hover {
+            border-color: var(--teal);
+            background: var(--mint-light);
+        }
+
+        .role-option:checked + .role-label {
+            border-color: var(--deep-teal);
+            background: linear-gradient(135deg, rgba(45,139,123,0.10), rgba(143,223,212,0.20));
+            box-shadow: 0 0 0 3px rgba(45,139,123,0.15);
+        }
+
+        .role-icon {
+            width: 44px; height: 44px;
+            border-radius: 12px;
+            background: var(--mint-light);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.3rem;
+            color: var(--deep-teal);
+            transition: var(--transition);
+        }
+
+        .role-option:checked + .role-label .role-icon {
+            background: linear-gradient(135deg, var(--deep-teal), var(--teal));
+            color: #fff;
+        }
+
+        .role-name {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .role-option:checked + .role-label .role-name { color: var(--deep-teal); }
+
+        /* Input groups */
+        .input-icon-wrapper { position: relative; }
+        .input-icon-wrapper .bi {
+            position: absolute;
+            left: 0.85rem; top: 50%; transform: translateY(-50%);
+            color: var(--teal);
+            font-size: 1rem;
+            pointer-events: none;
+            z-index: 5;
+        }
+        .input-icon-wrapper .form-control,
+        .input-icon-wrapper .form-select {
+            padding-left: 2.5rem;
+        }
+
+        /* Password strength */
+        .strength-bar-wrap {
+            height: 4px;
+            background: var(--mint-light);
+            border-radius: 50px;
+            margin-top: 0.4rem;
+            overflow: hidden;
+        }
+        .strength-bar {
+            height: 100%;
+            border-radius: 50px;
+            width: 0%;
+            transition: width 0.35s ease, background 0.35s ease;
+        }
+
+        /* Toggle password */
+        .toggle-pw {
+            position: absolute;
+            right: 0.85rem; top: 50%; transform: translateY(-50%);
+            background: none; border: none; padding: 0;
+            color: var(--teal); cursor: pointer; font-size: 1rem; z-index: 5;
+        }
+        .toggle-pw .bi {
+            position: static;
+            transform: none;
+            pointer-events: auto;
+        }
+
+        /* Submit btn */
+        .btn-register {
+            background: linear-gradient(135deg, var(--deep-teal) 0%, var(--teal) 100%);
+            border: none; color: #fff;
+            font-weight: 700; font-size: 1rem;
+            border-radius: var(--radius-md);
+            padding: 0.75rem;
+            box-shadow: 0 6px 20px rgba(45,139,123,0.30);
+            transition: var(--transition);
+            letter-spacing: 0.01em;
+        }
+        .btn-register:hover {
+            background: linear-gradient(135deg, var(--deep-teal-dk) 0%, var(--deep-teal) 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 28px rgba(45,139,123,0.40);
+            color: #fff;
+        }
+        .btn-register:active { transform: translateY(0); }
+
+        /* Step indicator */
+        .step-dots {
+            display: flex; gap: 6px; justify-content: center; margin-bottom: 1.5rem;
+        }
+        .step-dot {
+            width: 8px; height: 8px; border-radius: 50%;
+            background: var(--mint-light);
+            transition: var(--transition);
+        }
+        .step-dot.active {
+            background: var(--deep-teal);
+            width: 24px; border-radius: 4px;
+        }
+
+        /* Error messages */
+        .errorlist {
+            list-style: none; padding: 0; margin: 0.25rem 0 0;
+        }
+        .errorlist li {
+            font-size: 0.78rem; color: #c0392b; font-weight: 500;
+        }
+
+        @media (max-width: 767px) {
+            .auth-left { display: none; }
+            .auth-right { padding: 1.5rem 1rem; }
+        }
+    </style>
+</head>
+<body>
+{% include 'components/navbar.html' %}
+<div class="d-flex w-100" style="padding-top: 64px;">
+
+    <!-- ── Left Panel ── -->
+    <div class="auth-left col-lg-5 d-none d-lg-flex">
+        <div class="auth-left-content">
+
+            <div class="brand-logo">
+                <i class="bi bi-briefcase-fill"></i> SmartRecruit
+            </div>
+
+            <h2 style="color: var(--cream); font-size: 1.6rem; font-weight: 700; letter-spacing: -0.03em; margin-bottom: 0.5rem;">
+                Join the Future of Hiring
+            </h2>
+            <p style="color: rgba(254,255,214,0.72); font-size: 0.92rem; margin-bottom: 0;">
+                AI-powered recruitment intelligence at your fingertips.
+            </p>
+
+            <ul class="feature-list">
+                <li>
+                    <span class="fi"><i class="bi bi-robot"></i></span>
+                    AI Resume Scoring & Candidate Matching
+                </li>
+                <li>
+                    <span class="fi"><i class="bi bi-camera-video"></i></span>
+                    Smart Interview Question Generation
+                </li>
+                <li>
+                    <span class="fi"><i class="bi bi-bar-chart-line"></i></span>
+                    Real-time Analytics & Hiring Reports
+                </li>
+                <li>
+                    <span class="fi"><i class="bi bi-shield-check"></i></span>
+                    Enterprise-grade Security & Compliance
+                </li>
+                <li>
+                    <span class="fi"><i class="bi bi-bell"></i></span>
+                    Automated Notifications & Workflow
+                </li>
+            </ul>
+
+            <div class="trust-badges">
+                <div class="trust-badge">
+                    <span class="num">10K+</span>
+                    <span class="lbl">Candidates</span>
+                </div>
+                <div class="trust-badge">
+                    <span class="num">500+</span>
+                    <span class="lbl">Companies</span>
+                </div>
+                <div class="trust-badge">
+                    <span class="num">98%</span>
+                    <span class="lbl">Satisfaction</span>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ── Right Panel ── -->
+    <div class="auth-right col-12 col-lg-7">
+        <div class="register-card">
+
+            <!-- Header -->
+            <div class="text-center mb-4">
+                <div class="d-lg-none mb-3">
+                    <span class="brand-logo" style="font-size:1.5rem;color:var(--deep-teal);justify-content:center;display:flex;">
+                        <i class="bi bi-briefcase-fill me-2"></i>SmartRecruit
+                    </span>
+                </div>
+                <div class="step-dots">
+                    <div class="step-dot active" id="dot1"></div>
+                    <div class="step-dot" id="dot2"></div>
+                    <div class="step-dot" id="dot3"></div>
+                </div>
+                <h2>Create Your Account</h2>
+                <p class="text-muted" style="font-size:0.88rem;">Start your AI-powered hiring journey today</p>
+            </div>
+
+            <!-- Flash messages -->
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show py-2 mb-3" role="alert" style="font-size:0.85rem;">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            <!-- Form -->
+            <form method="post" id="registerForm" novalidate>
+                {% csrf_token %}
+                <!-- Hidden field that carries the selected role to Django -->
+                <input type="hidden" name="role" id="roleHidden" value="{{ form.role.value|default:'CANDIDATE' }}">
+
+                <!-- Role Selector -->
+                <div class="mb-4">
+                    <label class="form-label mb-2">
+                        <i class="bi bi-person-badge me-1 text-teal"></i>I am a…
+                    </label>
+                    <div class="role-grid">
+                        <div>
+                            <input type="radio" name="role_ui" id="role_candidate" value="CANDIDATE"
+                                   class="role-option"
+                                   {% if form.role.value == 'CANDIDATE' or not form.role.value %}checked{% endif %}>
+                            <label for="role_candidate" class="role-label w-100">
+                                <span class="role-icon"><i class="bi bi-person-circle"></i></span>
+                                <span class="role-name">Candidate</span>
+                            </label>
+                        </div>
+                        <div>
+                            <input type="radio" name="role_ui" id="role_recruiter" value="RECRUITER"
+                                   class="role-option"
+                                   {% if form.role.value == 'RECRUITER' %}checked{% endif %}>
+                            <label for="role_recruiter" class="role-label w-100">
+                                <span class="role-icon"><i class="bi bi-briefcase"></i></span>
+                                <span class="role-name">Recruiter / Hiring Manager</span>
+                            </label>
+                        </div>
+                    </div>
+                    {% if form.role.errors %}
+                        <ul class="errorlist mt-1">{% for e in form.role.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+                    {% endif %}
+                </div>
+
+                <!-- Username -->
+                <div class="mb-3">
+                    <label for="id_username" class="form-label">
+                        <i class="bi bi-at me-1 text-teal"></i>Username
+                    </label>
+                    <div class="input-icon-wrapper">
+                        <i class="bi bi-person"></i>
+                        <input type="text" name="username" id="id_username"
+                               class="form-control {% if form.username.errors %}is-invalid{% endif %}"
+                               placeholder="Choose a unique username"
+                               value="{{ form.username.value|default:'' }}"
+                               autocomplete="username" required>
+                    </div>
+                    {% if form.username.errors %}
+                        <ul class="errorlist">{% for e in form.username.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+                    {% endif %}
+                </div>
+
+                <!-- Email -->
+                <div class="mb-3">
+                    <label for="id_email" class="form-label">
+                        <i class="bi bi-envelope me-1 text-teal"></i>Email Address
+                    </label>
+                    <div class="input-icon-wrapper">
+                        <i class="bi bi-envelope"></i>
+                        <input type="email" name="email" id="id_email"
+                               class="form-control {% if form.email.errors %}is-invalid{% endif %}"
+                               placeholder="your@email.com"
+                               value="{{ form.email.value|default:'' }}"
+                               autocomplete="email" required>
+                    </div>
+                    {% if form.email.errors %}
+                        <ul class="errorlist">{% for e in form.email.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+                    {% endif %}
+                </div>
+
+                <!-- Password -->
+                <div class="mb-3">
+                    <label for="id_password1" class="form-label">
+                        <i class="bi bi-lock me-1 text-teal"></i>Password
+                    </label>
+                    <div class="input-icon-wrapper">
+                        <i class="bi bi-lock"></i>
+                        <input type="password" name="password1" id="id_password1"
+                               class="form-control {% if form.password1.errors %}is-invalid{% endif %}"
+                               placeholder="Create a strong password"
+                               autocomplete="new-password" required>
+                        <button type="button" class="toggle-pw" onclick="togglePw('id_password1', this)">
+                            <i class="bi bi-eye-slash"></i>
+                        </button>
+                    </div>
+                    <!-- Strength bar -->
+                    <div class="strength-bar-wrap mt-1">
+                        <div class="strength-bar" id="strengthBar"></div>
+                    </div>
+                    <div class="d-flex justify-content-between mt-1">
+                        <span class="form-text" id="strengthLabel">Enter a password</span>
+                        <span class="form-text" id="strengthPercent"></span>
+                    </div>
+                    {% if form.password1.errors %}
+                        <ul class="errorlist">{% for e in form.password1.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+                    {% endif %}
+                </div>
+
+                <!-- Confirm Password -->
+                <div class="mb-4">
+                    <label for="id_password2" class="form-label">
+                        <i class="bi bi-lock-fill me-1 text-teal"></i>Confirm Password
+                    </label>
+                    <div class="input-icon-wrapper">
+                        <i class="bi bi-lock-fill"></i>
+                        <input type="password" name="password2" id="id_password2"
+                               class="form-control {% if form.password2.errors %}is-invalid{% endif %}"
+                               placeholder="Re-enter your password"
+                               autocomplete="new-password" required>
+                        <button type="button" class="toggle-pw" onclick="togglePw('id_password2', this)">
+                            <i class="bi bi-eye-slash"></i>
+                        </button>
+                    </div>
+                    <div id="pwMatchMsg" class="form-text" style="display:none;"></div>
+                    {% if form.password2.errors %}
+                        <ul class="errorlist">{% for e in form.password2.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+                    {% endif %}
+                </div>
+
+
+
+                <!-- Submit -->
+                <button type="submit" class="btn btn-register w-100 mb-3" id="submitBtn">
+                    <i class="bi bi-rocket-takeoff me-2"></i>Create My Account
+                </button>
+
+                <!-- Divider -->
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <hr class="flex-grow-1" style="border-color: var(--border);">
+                    <span class="text-muted" style="font-size:0.78rem;white-space:nowrap;">Already have an account?</span>
+                    <hr class="flex-grow-1" style="border-color: var(--border);">
+                </div>
+
+                <a href="{% url 'login' %}" class="btn w-100 fw-600"
+                   style="border: 2px solid var(--teal); color: var(--deep-teal); border-radius: var(--radius-md); padding: 0.65rem; font-weight: 600;">
+                    <i class="bi bi-box-arrow-in-right me-2"></i>Sign In Instead
+                </a>
+
+            </form>
+
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    /* ── Toggle password visibility ── */
+    function togglePw(inputId, btn) {
+        const input = document.getElementById(inputId);
+        const icon = btn.querySelector('i');
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.classList.replace('bi-eye-slash', 'bi-eye');
+        } else {
+            input.type = 'password';
+            icon.classList.replace('bi-eye', 'bi-eye-slash');
+        }
+    }
+
+    /* ── Password strength ── */
+    const pw1 = document.getElementById('id_password1');
+    const bar = document.getElementById('strengthBar');
+    const lbl = document.getElementById('strengthLabel');
+    const pct = document.getElementById('strengthPercent');
+
+    pw1.addEventListener('input', () => {
+        const val = pw1.value;
+        let score = 0;
+        if (val.length >= 8)  score++;
+        if (/[A-Z]/.test(val)) score++;
+        if (/[0-9]/.test(val)) score++;
+        if (/[^A-Za-z0-9]/.test(val)) score++;
+        if (val.length >= 12) score++;
+
+        const levels = [
+            { pct: '0%',   color: 'transparent',      text: 'Enter a password' },
+            { pct: '20%',  color: '#e05252',           text: 'Very Weak' },
+            { pct: '40%',  color: '#e08a52',           text: 'Weak' },
+            { pct: '60%',  color: '#c9a227',           text: 'Fair' },
+            { pct: '80%',  color: 'var(--teal)',       text: 'Strong' },
+            { pct: '100%', color: 'var(--deep-teal)',  text: '✓ Very Strong' },
+        ];
+
+        const l = levels[score];
+        bar.style.width    = l.pct;
+        bar.style.background = l.color;
+        lbl.textContent    = l.text;
+        pct.textContent    = score > 0 ? `${score * 20}%` : '';
+    });
+
+    /* ── Confirm password match ── */
+    const pw2   = document.getElementById('id_password2');
+    const match = document.getElementById('pwMatchMsg');
+
+    pw2.addEventListener('input', () => {
+        if (!pw2.value) { match.style.display = 'none'; return; }
+        match.style.display = 'block';
+        if (pw1.value === pw2.value) {
+            match.textContent = '✓ Passwords match';
+            match.style.color = 'var(--deep-teal)';
+        } else {
+            match.textContent = '✗ Passwords do not match';
+            match.style.color = '#e05252';
+        }
+    });
+
+    /* ── Step dots animate on field focus ── */
+    const dots = [
+        document.getElementById('dot1'),
+        document.getElementById('dot2'),
+        document.getElementById('dot3'),
+    ];
+
+    function setStep(n) {
+        dots.forEach((d, i) => {
+            d.classList.toggle('active', i === n);
+        });
+    }
+
+    /* ── Sync radio → hidden field ── */
+    const roleHidden = document.getElementById('roleHidden');
+    document.querySelectorAll('.role-option').forEach(r => {
+        r.addEventListener('change', () => {
+            roleHidden.value = r.value;
+            setStep(0);
+        });
+    });
+
+    /* ── Pre-select role from ?role= URL parameter ── */
+    (function() {
+        const params = new URLSearchParams(window.location.search);
+        const preRole = params.get('role');
+        if (preRole) {
+            const target = document.querySelector('.role-option[value="' + preRole.toUpperCase() + '"]');
+            if (target) {
+                target.checked = true;
+                roleHidden.value = preRole.toUpperCase();
+            }
+        }
+    })();
+    document.getElementById('id_username').addEventListener('focus', () => setStep(1));
+    document.getElementById('id_email').addEventListener('focus', () => setStep(1));
+    document.getElementById('id_password1').addEventListener('focus', () => setStep(2));
+    document.getElementById('id_password2').addEventListener('focus', () => setStep(2));
+
+    /* ── Loading state on submit ── */
+    document.getElementById('registerForm').addEventListener('submit', function() {
+        const btn = document.getElementById('submitBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Creating Account…';
+    });
+</script>
+</body>
+</html>

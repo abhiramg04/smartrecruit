@@ -1,0 +1,578 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Analytics &amp; Reporting | SmartRecruit{% endblock %}
+
+{% block extra_css %}
+<style>
+    .analytics-header {
+        background: linear-gradient(135deg, #1F6B5C 0%, #2D8B7B 60%, #5BAEA0 100%);
+        color: #ffffff;
+        padding: 2.2rem 2.5rem;
+        border-radius: 20px;
+        margin-bottom: 2rem;
+        box-shadow: 0 10px 30px rgba(31, 107, 92, 0.20);
+        position: relative;
+        overflow: hidden;
+    }
+    .analytics-header::after {
+        content: '';
+        position: absolute;
+        width: 300px; height: 300px;
+        border-radius: 50%;
+        background: rgba(254, 255, 214, 0.08);
+        top: -100px; right: -50px;
+        pointer-events: none;
+    }
+
+    .kpi-card {
+        background: #ffffff;
+        border-radius: 12px;
+        padding: 1.25rem;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .kpi-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+    }
+
+    .kpi-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+    }
+
+    /* Funnel Component */
+    .funnel-wrapper {
+        background: #ffffff;
+        border-radius: 14px;
+        padding: 1.5rem;
+        border: 1px solid #e2e8f0;
+        margin-bottom: 2rem;
+    }
+
+    .funnel-pipeline {
+        display: flex;
+        gap: 0.75rem;
+        align-items: center;
+        justify-content: space-between;
+        margin-top: 1.25rem;
+        flex-wrap: wrap;
+    }
+
+    .funnel-stage {
+        flex: 1;
+        min-width: 140px;
+        background: #f8fafc;
+        border: 2px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 1rem 0.75rem;
+        text-align: center;
+        position: relative;
+        transition: all 0.2s ease;
+    }
+
+    .funnel-stage:hover {
+        border-color: #0d9488;
+        background: #f0fdfa;
+    }
+
+    .funnel-stage.applied { border-top: 4px solid #3b82f6; }
+    .funnel-stage.screened { border-top: 4px solid #06b6d4; }
+    .funnel-stage.shortlisted { border-top: 4px solid #8b5cf6; }
+    .funnel-stage.interviewed { border-top: 4px solid #f59e0b; }
+    .funnel-stage.selected { border-top: 4px solid #10b981; }
+
+    .funnel-arrow {
+        color: #94a3b8;
+        font-size: 1.25rem;
+    }
+
+    .funnel-value {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #0f172a;
+        margin: 0.25rem 0;
+    }
+
+    .funnel-pct {
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: #0d9488;
+    }
+
+    /* AI Analytics Cards */
+    .ai-stat-card {
+        background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 100%);
+        border: 1px solid #99f6e4;
+        border-radius: 12px;
+        padding: 1.25rem;
+    }
+
+    /* Custom Tables */
+    .table-custom {
+        background: #ffffff;
+        border-radius: 12px;
+        overflow: hidden;
+        border: 1px solid #e2e8f0;
+    }
+
+    .table-custom th {
+        background: #f8fafc;
+        color: #475569;
+        font-weight: 600;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .timeline-dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: #0d9488;
+        display: inline-block;
+        margin-right: 0.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-3">
+
+    <!-- Header Banner -->
+    <div class="analytics-header d-flex justify-content-between align-items-center flex-wrap gap-3">
+        <div style="z-index: 1;">
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <i class="bi bi-graph-up-arrow fs-3" style="color: #FEFFD6;"></i>
+                <h2 class="mb-0 fw-bold text-white">Analytics &amp; Intelligence Reports</h2>
+            </div>
+            <p class="mb-0 fw-500" style="color: rgba(254, 255, 214, 0.90); font-size: 1rem;">
+                {% if user_role == 'CANDIDATE' %}
+                    Personal application statistics and career pipeline tracking.
+                {% elif user_role == 'ADMIN' %}
+                    Platform-wide recruitment metrics, organization activity &amp; AI operational statistics.
+                {% else %}
+                    Recruitment pipeline statistics, hiring funnel conversion, and AI operation analytics.
+                {% endif %}
+            </p>
+        </div>
+        <div style="z-index: 1;">
+            <button class="btn btn-light fw-bold px-3 py-2 text-teal shadow-sm" onclick="location.reload()" style="border-radius: 10px;">
+                <i class="bi bi-arrow-clockwise me-1"></i> Refresh Data
+            </button>
+        </div>
+    </div>
+
+    {% if user_role == 'CANDIDATE' %}
+    <!-- ================================================================= -->
+    <!-- CANDIDATE PERSONAL ANALYTICS (PRIVACY SAFEGUARDED)               -->
+    <!-- ================================================================= -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="kpi-card d-flex align-items-center gap-3">
+                <div class="kpi-icon bg-primary-subtle text-primary"><i class="bi bi-send-fill"></i></div>
+                <div>
+                    <div class="text-muted small">Applications Sent</div>
+                    <div class="fs-3 fw-bold">{{ candidate_analytics.applications_count }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="kpi-card d-flex align-items-center gap-3">
+                <div class="kpi-icon bg-purple-subtle text-purple" style="background:#f3e8ff; color:#7e22ce;"><i class="bi bi-star-fill"></i></div>
+                <div>
+                    <div class="text-muted small">Shortlisted</div>
+                    <div class="fs-3 fw-bold">{{ candidate_analytics.shortlisted_count }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="kpi-card d-flex align-items-center gap-3">
+                <div class="kpi-icon bg-warning-subtle text-warning"><i class="bi bi-calendar-event"></i></div>
+                <div>
+                    <div class="text-muted small">Interviews</div>
+                    <div class="fs-3 fw-bold">{{ candidate_analytics.interviews_count }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="kpi-card d-flex align-items-center gap-3">
+                <div class="kpi-icon bg-info-subtle text-info"><i class="bi bi-clipboard-check"></i></div>
+                <div>
+                    <div class="text-muted small">Assessments Assigned</div>
+                    <div class="fs-3 fw-bold">{{ candidate_analytics.assessments_count }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Candidate Application Status Updates Timeline -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-header bg-white py-3">
+            <h5 class="mb-0 fw-bold"><i class="bi bi-clock-history text-teal me-2"></i> Application Status History</h5>
+        </div>
+        <div class="card-body">
+            {% if candidate_analytics.status_updates %}
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Job Title</th>
+                                <th>Company</th>
+                                <th>Applied On</th>
+                                <th>Current Status</th>
+                                <th>Last Updated</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in candidate_analytics.status_updates %}
+                            <tr>
+                                <td class="fw-bold">{{ item.job_title }}</td>
+                                <td>{{ item.company_name }}</td>
+                                <td>{{ item.applied_at|date:"M d, Y" }}</td>
+                                <td>
+                                    <span class="badge 
+                                        {% if item.raw_status == 'OFFER' %}bg-success
+                                        {% elif item.raw_status == 'SHORTLISTED' %}bg-primary
+                                        {% elif item.raw_status == 'INTERVIEW' or item.raw_status == 'HR_ROUND' %}bg-warning text-dark
+                                        {% elif item.raw_status == 'REJECTED' %}bg-danger
+                                        {% else %}bg-secondary{% endif %}">
+                                        {{ item.status }}
+                                    </span>
+                                </td>
+                                <td class="small text-muted">{{ item.updated_at|date:"M d, Y H:i" }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center text-muted py-4">No application history found.</div>
+            {% endif %}
+        </div>
+    </div>
+
+
+    {% elif user_role == 'ADMIN' %}
+    <!-- ================================================================= -->
+    <!-- ADMIN PLATFORM-WIDE REPORTING                                     -->
+    <!-- ================================================================= -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="kpi-card d-flex align-items-center gap-3">
+                <div class="kpi-icon bg-primary-subtle text-primary"><i class="bi bi-people-fill"></i></div>
+                <div>
+                    <div class="text-muted small">Total Users</div>
+                    <div class="fs-3 fw-bold">{{ admin_analytics.users.total }}</div>
+                    <div class="small text-muted">{{ admin_analytics.users.candidates }} Candidates | {{ admin_analytics.users.recruiters }} Recruiters</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="kpi-card d-flex align-items-center gap-3">
+                <div class="kpi-icon bg-success-subtle text-success"><i class="bi bi-building-check"></i></div>
+                <div>
+                    <div class="text-muted small">Companies Approved</div>
+                    <div class="fs-3 fw-bold">{{ admin_analytics.companies.approved }}</div>
+                    <div class="small text-warning">{{ admin_analytics.companies.pending }} Pending Approval</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="kpi-card d-flex align-items-center gap-3">
+                <div class="kpi-icon bg-info-subtle text-info"><i class="bi bi-briefcase-fill"></i></div>
+                <div>
+                    <div class="text-muted small">Platform Jobs</div>
+                    <div class="fs-3 fw-bold">{{ admin_analytics.jobs.total }}</div>
+                    <div class="small text-success">{{ admin_analytics.jobs.active }} Active</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="kpi-card d-flex align-items-center gap-3">
+                <div class="kpi-icon bg-teal-subtle text-teal" style="background:#e0f2fe; color:#0369a1;"><i class="bi bi-trophy-fill"></i></div>
+                <div>
+                    <div class="text-muted small">Overall Hire Rate</div>
+                    <div class="fs-3 fw-bold">{{ admin_analytics.applications.selection_rate }}%</div>
+                    <div class="small text-muted">{{ admin_analytics.applications.selected }} Offers / {{ admin_analytics.applications.total }} Apps</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin AI Usage Metrics -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-header bg-white py-3">
+            <h5 class="mb-0 fw-bold"><i class="bi bi-robot text-teal me-2"></i> Platform AI Usage &amp; Operations</h5>
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-2.4 col-6">
+                    <div class="ai-stat-card text-center">
+                        <div class="text-muted small">AI Screenings</div>
+                        <div class="fs-4 fw-bold text-teal">{{ ai_analytics.ai_screening_count }}</div>
+                    </div>
+                </div>
+                <div class="col-md-2.4 col-6">
+                    <div class="ai-stat-card text-center">
+                        <div class="text-muted small">AI Ranking Ops</div>
+                        <div class="fs-4 fw-bold text-teal">{{ ai_analytics.ai_ranking_ops_count }}</div>
+                    </div>
+                </div>
+                <div class="col-md-2.4 col-6">
+                    <div class="ai-stat-card text-center">
+                        <div class="text-muted small">Question Generations</div>
+                        <div class="fs-4 fw-bold text-teal">{{ ai_analytics.question_generation_count }}</div>
+                    </div>
+                </div>
+                <div class="col-md-2.4 col-6">
+                    <div class="ai-stat-card text-center">
+                        <div class="text-muted small">Interview Analyses</div>
+                        <div class="fs-4 fw-bold text-teal">{{ ai_analytics.interview_analysis_count }}</div>
+                    </div>
+                </div>
+                <div class="col-md-2.4 col-6">
+                    <div class="ai-stat-card text-center">
+                        <div class="text-muted small">Assistant Chats</div>
+                        <div class="fs-4 fw-bold text-teal">{{ ai_analytics.ai_assistant_usage_count }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Recent Activity Log -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-header bg-white py-3">
+            <h5 class="mb-0 fw-bold"><i class="bi bi-activity text-primary me-2"></i> Recent System Activity</h5>
+        </div>
+        <div class="card-body">
+            <ul class="list-group list-group-flush">
+                {% for log in admin_analytics.recent_activity %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <span class="timeline-dot"></span>
+                        <strong class="text-dark">{{ log.action }}</strong> &mdash; {{ log.description }}
+                        <span class="text-muted small ms-2">({{ log.user__email|default:"System" }})</span>
+                    </div>
+                    <span class="small text-muted">{{ log.timestamp|date:"M d, H:i" }}</span>
+                </li>
+                {% empty %}
+                <li class="list-group-item text-muted text-center py-3">No system activity logged yet.</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+
+    {% else %}
+    <!-- ================================================================= -->
+    <!-- RECRUITER / COMPANY ANALYTICS & HIRING FUNNEL                    -->
+    <!-- ================================================================= -->
+    
+    <!-- 8 KPI Stat Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="kpi-card d-flex align-items-center gap-3">
+                <div class="kpi-icon bg-primary-subtle text-primary"><i class="bi bi-briefcase"></i></div>
+                <div>
+                    <div class="text-muted small">Active Jobs</div>
+                    <div class="fs-3 fw-bold">{{ recruiter_analytics.active_jobs }}</div>
+                    <div class="small text-muted">Out of {{ recruiter_analytics.total_jobs }} Total Jobs</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="kpi-card d-flex align-items-center gap-3">
+                <div class="kpi-icon bg-info-subtle text-info"><i class="bi bi-file-earmark-person"></i></div>
+                <div>
+                    <div class="text-muted small">Total Applications</div>
+                    <div class="fs-3 fw-bold">{{ recruiter_analytics.total_applications }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="kpi-card d-flex align-items-center gap-3">
+                <div class="kpi-icon bg-teal-subtle text-teal" style="background:#ccfbf1; color:#0f766e;"><i class="bi bi-robot"></i></div>
+                <div>
+                    <div class="text-muted small">AI-Screened</div>
+                    <div class="fs-3 fw-bold">{{ recruiter_analytics.ai_screened_candidates }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="kpi-card d-flex align-items-center gap-3">
+                <div class="kpi-icon bg-purple-subtle text-purple" style="background:#f3e8ff; color:#7e22ce;"><i class="bi bi-star-fill"></i></div>
+                <div>
+                    <div class="text-muted small">Shortlisted</div>
+                    <div class="fs-3 fw-bold">{{ recruiter_analytics.shortlisted_candidates }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="kpi-card d-flex align-items-center gap-3">
+                <div class="kpi-icon bg-warning-subtle text-warning"><i class="bi bi-clipboard-check"></i></div>
+                <div>
+                    <div class="text-muted small">Assessments</div>
+                    <div class="fs-3 fw-bold">{{ recruiter_analytics.assessments_count }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="kpi-card d-flex align-items-center gap-3">
+                <div class="kpi-icon bg-primary-subtle text-primary"><i class="bi bi-calendar-check"></i></div>
+                <div>
+                    <div class="text-muted small">Scheduled Interviews</div>
+                    <div class="fs-3 fw-bold">{{ recruiter_analytics.scheduled_interviews }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="kpi-card d-flex align-items-center gap-3">
+                <div class="kpi-icon bg-success-subtle text-success"><i class="bi bi-check-circle-fill"></i></div>
+                <div>
+                    <div class="text-muted small">Selected (Offers)</div>
+                    <div class="fs-3 fw-bold">{{ recruiter_analytics.selected_candidates }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="kpi-card d-flex align-items-center gap-3">
+                <div class="kpi-icon bg-danger-subtle text-danger"><i class="bi bi-x-circle-fill"></i></div>
+                <div>
+                    <div class="text-muted small">Rejected</div>
+                    <div class="fs-3 fw-bold">{{ recruiter_analytics.rejected_candidates }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- HIRING FUNNEL VISUALIZATION -->
+    <div class="funnel-wrapper">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h5 class="mb-0 fw-bold text-dark"><i class="bi bi-funnel-fill text-teal me-2"></i> Recruitment Hiring Funnel</h5>
+                <small class="text-muted">Conversion progression from application submission to candidate selection.</small>
+            </div>
+        </div>
+
+        <div class="funnel-pipeline">
+            {% for stage in funnel %}
+            <div class="funnel-stage {{ stage.stage|lower }}">
+                <div class="text-muted small fw-bold uppercase">{{ stage.stage }}</div>
+                <div class="funnel-value">{{ stage.count }}</div>
+                <div class="funnel-pct">{{ stage.percentage }}% conversion</div>
+            </div>
+            {% if not forloop.last %}
+            <div class="funnel-arrow"><i class="bi bi-chevron-right"></i></div>
+            {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- PER-JOB ANALYTICS BREAKDOWN -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+            <h5 class="mb-0 fw-bold"><i class="bi bi-table text-teal me-2"></i> Per-Job Analytics Breakdown</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4">Job Title</th>
+                            <th>Status</th>
+                            <th class="text-center">Applications</th>
+                            <th class="text-center">Screened</th>
+                            <th class="text-center">Shortlisted</th>
+                            <th class="text-center">Interviewed</th>
+                            <th class="text-center">Selected</th>
+                            <th class="text-center">Rejected</th>
+                            <th class="pe-4 text-center">Avg AI Score</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for job in job_analytics %}
+                        <tr>
+                            <td class="ps-4 fw-bold text-dark">{{ job.title }}</td>
+                            <td>
+                                {% if job.is_active %}
+                                    <span class="badge bg-success-subtle text-success border border-success">Active</span>
+                                {% else %}
+                                    <span class="badge bg-secondary-subtle text-secondary">Closed/Draft</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center fw-semibold">{{ job.application_count }}</td>
+                            <td class="text-center text-info fw-semibold">{{ job.screening_count }}</td>
+                            <td class="text-center text-purple fw-semibold" style="color:#7e22ce;">{{ job.shortlist_count }}</td>
+                            <td class="text-center text-warning fw-semibold">{{ job.interview_count }}</td>
+                            <td class="text-center text-success fw-bold">{{ job.selection_count }}</td>
+                            <td class="text-center text-danger fw-semibold">{{ job.rejection_count }}</td>
+                            <td class="pe-4 text-center">
+                                {% if job.avg_ai_score %}
+                                    <span class="badge bg-teal-subtle text-teal fs-6 px-3 py-1" style="background:#ccfbf1; color:#0f766e;">
+                                        {{ job.avg_ai_score }}/100
+                                    </span>
+                                {% else %}
+                                    <span class="text-muted small">N/A</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="9" class="text-center text-muted py-4">No jobs found for analytics analysis.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI OPERATIONS & USAGE STATS -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-header bg-white py-3">
+            <h5 class="mb-0 fw-bold"><i class="bi bi-cpu text-teal me-2"></i> AI Operational Usage Summary</h5>
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <div class="ai-stat-card text-center">
+                        <div class="text-muted small">AI Screening Operations</div>
+                        <div class="fs-3 fw-bold text-teal">{{ ai_analytics.ai_screening_count }}</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="ai-stat-card text-center">
+                        <div class="text-muted small">Candidate Ranking Runs</div>
+                        <div class="fs-3 fw-bold text-teal">{{ ai_analytics.ai_ranking_ops_count }}</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="ai-stat-card text-center">
+                        <div class="text-muted small">Interview Analyses</div>
+                        <div class="fs-3 fw-bold text-teal">{{ ai_analytics.interview_analysis_count }}</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="ai-stat-card text-center">
+                        <div class="text-muted small">AI Assistant Interactions</div>
+                        <div class="fs-3 fw-bold text-teal">{{ ai_analytics.ai_assistant_usage_count }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% endif %}
+
+</div>
+{% endblock %}

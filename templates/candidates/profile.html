@@ -1,0 +1,323 @@
+{% extends 'base.html' %}
+
+{% block title %}My Resume Profile - SmartRecruit{% endblock %}
+
+{% block extra_css %}
+<style>
+  .profile-hero { 
+    background: linear-gradient(135deg, rgba(99,102,241,0.15) 0%, rgba(168,85,247,0.1) 100%);
+    border-radius: 20px;
+    padding: 2.5rem;
+    border: 1px solid rgba(99,102,241,0.25);
+    position: relative;
+    overflow: hidden;
+  }
+  .profile-hero::before {
+    content: '';
+    position: absolute;
+    top: -40px;
+    right: -40px;
+    width: 180px;
+    height: 180px;
+    background: radial-gradient(circle, rgba(99,102,241,0.25), transparent 70%);
+    border-radius: 50%;
+  }
+  .profile-avatar {
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #6366f1, #a855f7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: white;
+    flex-shrink: 0;
+    border: 3px solid rgba(99,102,241,0.4);
+  }
+  .contact-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(0,0,0,0.04);
+    border: 1px solid rgba(0,0,0,0.08);
+    border-radius: 999px;
+    padding: 6px 16px;
+    font-size: 0.85rem;
+    margin: 4px;
+    color: rgba(0,0,0,0.75);
+  }
+  .section-card {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 14px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    transition: border-color 0.2s;
+  }
+  .section-card:hover { border-color: rgba(99,102,241,0.4); }
+  .section-title {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #818cf8;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: rgba(99,102,241,0.25);
+  }
+  .skill-tag {
+    display: inline-block;
+    background: rgba(99,102,241,0.15);
+    border: 1px solid rgba(99,102,241,0.35);
+    color: #a5b4fc;
+    border-radius: 6px;
+    padding: 4px 12px;
+    font-size: 0.8rem;
+    margin: 3px;
+    font-weight: 500;
+  }
+  .lang-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(168,85,247,0.12);
+    border: 1px solid rgba(168,85,247,0.3);
+    color: #d8b4fe;
+    border-radius: 6px;
+    padding: 5px 14px;
+    font-size: 0.82rem;
+    margin: 3px;
+  }
+  .timeline-item {
+    border-left: 2px solid rgba(99,102,241,0.35);
+    padding-left: 1rem;
+    margin-bottom: 0.8rem;
+    position: relative;
+  }
+  .timeline-item::before {
+    content: '';
+    position: absolute;
+    left: -5px;
+    top: 6px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #6366f1;
+  }
+  .timeline-item p {
+    font-size: 0.88rem;
+    color: rgba(0,0,0,0.75);
+    margin: 0;
+    line-height: 1.6;
+  }
+  .cert-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(0,0,0,0.06);
+  }
+  .cert-item:last-child { border-bottom: none; }
+  .empty-state {
+    text-align: center;
+    padding: 2rem;
+    color: rgba(0,0,0,0.45);
+  }
+  .parse-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 14px;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 600;
+  }
+  .status-success { background: rgba(74,222,128,0.15); color: #4ade80; border: 1px solid rgba(74,222,128,0.3); }
+  .status-error   { background: rgba(248,113,113,0.15); color: #f87171; border: 1px solid rgba(248,113,113,0.3); }
+</style>
+{% endblock %}
+
+{% block content %}
+{% if not profile or not profile.is_parsed %}
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+      <div class="glass-panel text-center py-5">
+        <i class="bi bi-file-earmark-person display-1 text-primary mb-4 d-block"></i>
+        <h3 class="fw-bold mb-3">No Resume Parsed Yet</h3>
+        <p class="text-muted mb-4">Upload your resume to generate your AI-powered SmartRecruit profile.</p>
+        <a href="{% url 'resume_upload' %}" class="btn btn-primary-custom px-4 py-2 fw-bold">
+          <i class="bi bi-upload me-2"></i> Upload Resume
+        </a>
+        {% if profile and profile.parse_error %}
+        <div class="alert alert-danger mt-4 text-start">
+          <i class="bi bi-exclamation-triangle me-2"></i>
+          <strong>Last Error:</strong> {{ profile.parse_error }}
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+{% else %}
+
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+  <h1 class="fw-bold m-0">My Resume Profile</h1>
+  <div class="d-flex gap-2 align-items-center flex-wrap">
+    <span class="parse-status-badge status-success">
+      <i class="bi bi-check-circle-fill"></i> Parsed Successfully
+    </span>
+    <a href="?reparse=true" class="btn btn-outline-warning btn-sm" title="Re-run resume parser with latest extraction engine">
+      <i class="bi bi-arrow-clockwise me-1"></i> Re-parse
+    </a>
+    <a href="{% url 'candidate_profile_edit' %}" class="btn btn-outline-info btn-sm">
+      <i class="bi bi-pencil me-1"></i> Edit Profile
+    </a>
+    <a href="{% url 'resume_upload' %}" class="btn btn-outline-light btn-sm">
+      <i class="bi bi-arrow-repeat me-1"></i> Re-upload
+    </a>
+  </div>
+</div>
+
+<div class="row g-4">
+  <!-- LEFT: Profile Card + Contact + Skills + Languages -->
+  <div class="col-lg-4">
+
+    <!-- Hero -->
+    <div class="profile-hero mb-4">
+      <div class="d-flex align-items-center gap-3 mb-3">
+        <div class="profile-avatar">
+          {{ profile.full_name|default:"?"|make_list|first|upper }}
+        </div>
+        <div>
+          <h3 class="fw-bold mb-0">{{ profile.full_name|default:"Name Not Found" }}</h3>
+          <p class="text-muted small mb-0">Candidate Profile</p>
+        </div>
+      </div>
+      <div class="flex-wrap">
+        {% if profile.email %}
+          <span class="contact-pill"><i class="bi bi-envelope text-primary"></i> {{ profile.email }}</span>
+        {% endif %}
+        {% if profile.phone %}
+          <span class="contact-pill"><i class="bi bi-telephone text-success"></i> {{ profile.phone }}</span>
+        {% endif %}
+        {% if profile.linkedin_url %}
+          <a href="{{ profile.linkedin_url }}" target="_blank" class="contact-pill text-decoration-none">
+            <i class="bi bi-linkedin" style="color: #0a66c2;"></i> LinkedIn
+          </a>
+        {% endif %}
+        {% if profile.github_url %}
+          <a href="{{ profile.github_url }}" target="_blank" class="contact-pill text-decoration-none">
+            <i class="bi bi-github"></i> GitHub
+          </a>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Skills -->
+    <div class="section-card">
+      <div class="section-title"><i class="bi bi-lightning-charge-fill"></i> Skills</div>
+      {% if profile.skills %}
+        {% for skill in profile.skills %}
+          <span class="skill-tag">{{ skill }}</span>
+        {% endfor %}
+      {% else %}
+        <div class="empty-state"><i class="bi bi-emoji-frown"></i><br>No skills detected</div>
+      {% endif %}
+    </div>
+
+    <!-- Languages -->
+    <div class="section-card">
+      <div class="section-title"><i class="bi bi-translate"></i> Languages</div>
+      {% if profile.languages %}
+        {% for lang in profile.languages %}
+          <span class="lang-badge"><i class="bi bi-globe2"></i> {{ lang }}</span>
+        {% endfor %}
+      {% else %}
+        <div class="empty-state">No languages detected</div>
+      {% endif %}
+    </div>
+
+    <!-- Upload Info -->
+    <div class="section-card">
+      <div class="section-title"><i class="bi bi-file-earmark"></i> Document Info</div>
+      <p class="text-muted small mb-1"><i class="bi bi-paperclip me-2"></i>{{ profile.resume_file.name|default:"No file" }}</p>
+      <p class="text-muted small mb-0"><i class="bi bi-clock me-2"></i>Parsed {{ profile.updated_at|timesince }} ago</p>
+    </div>
+  </div>
+
+  <!-- RIGHT: Experience, Education, Projects, Certifications -->
+  <div class="col-lg-8">
+
+    {% if profile.summary %}
+    <!-- Summary -->
+    <div class="section-card">
+      <div class="section-title"><i class="bi bi-person-lines-fill"></i> Professional Summary</div>
+      <p class="mb-0 text-dark small" style="line-height:1.6;">{{ profile.summary }}</p>
+    </div>
+    {% endif %}
+
+    <!-- Experience -->
+    <div class="section-card">
+      <div class="section-title"><i class="bi bi-briefcase-fill"></i> Work Experience</div>
+      {% if profile.experience %}
+        {% for item in profile.experience %}
+          <div class="timeline-item"><p>{{ item }}</p></div>
+        {% endfor %}
+      {% else %}
+        <div class="empty-state"><i class="bi bi-briefcase"></i><br>No experience section detected</div>
+      {% endif %}
+    </div>
+
+    <!-- Education -->
+    <div class="section-card">
+      <div class="section-title"><i class="bi bi-mortarboard-fill"></i> Education</div>
+      {% if profile.education %}
+        {% for item in profile.education %}
+          <div class="timeline-item"><p>{{ item }}</p></div>
+        {% endfor %}
+      {% else %}
+        <div class="empty-state"><i class="bi bi-mortarboard"></i><br>No education section detected</div>
+      {% endif %}
+    </div>
+
+    <!-- Projects -->
+    <div class="section-card">
+      <div class="section-title"><i class="bi bi-diagram-3-fill"></i> Projects</div>
+      {% if profile.projects %}
+        {% for item in profile.projects %}
+          <div class="timeline-item"><p>{{ item }}</p></div>
+        {% endfor %}
+      {% else %}
+        <div class="empty-state"><i class="bi bi-code-square"></i><br>No projects section detected</div>
+      {% endif %}
+    </div>
+
+    <!-- Certifications -->
+    <div class="section-card">
+      <div class="section-title"><i class="bi bi-patch-check-fill"></i> Certifications</div>
+      {% if profile.certifications %}
+        {% for item in profile.certifications %}
+          <div class="cert-item">
+            <i class="bi bi-award-fill text-warning mt-1 flex-shrink-0"></i>
+            <p class="text-dark small mb-0">{{ item }}</p>
+          </div>
+        {% endfor %}
+      {% else %}
+        <div class="empty-state"><i class="bi bi-patch-check"></i><br>No certifications detected</div>
+      {% endif %}
+    </div>
+
+  </div>
+</div>
+
+{% endif %}
+{% endblock %}

@@ -1,0 +1,232 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ profile.full_name|default:profile.user.username }} - Candidate Profile{% endblock %}
+
+{% block content %}
+<div class="page-header animate-fade-in d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+    <div>
+        <h2 class="fw-bold m-0" style="color: var(--cream);">Candidate Profile</h2>
+        <p class="mb-0" style="color: rgba(254,255,214,0.85);">Full AI-parsed resume and application history</p>
+    </div>
+    <a href="{% url 'recruiter_candidate_list' %}" class="btn btn-outline-light fw-600">
+        <i class="bi bi-arrow-left me-1"></i> Back to Candidates
+    </a>
+</div>
+
+<div class="row g-4 animate-children">
+    <!-- Left Sidebar -->
+    <div class="col-lg-4">
+
+        <!-- Profile Card -->
+        <div class="card bg-white border-0 shadow-sm mb-4 text-center" style="border-top: 4px solid var(--teal) !important;">
+            <div class="card-body p-4">
+                <div class="mx-auto rounded-circle d-flex align-items-center justify-content-center fw-bold mb-3 shadow-sm"
+                     style="width: 80px; height: 80px; background: var(--mint-light); color: var(--teal); font-size: 2rem;">
+                    {{ profile.full_name|first|upper|default:profile.user.username|first|upper }}
+                </div>
+                <h4 class="fw-bold text-dark mb-1">{{ profile.full_name|default:profile.user.get_full_name|default:profile.user.username }}</h4>
+                <p class="text-muted small mb-3">{{ profile.email|default:profile.user.email }}</p>
+
+                <div class="d-flex flex-column gap-2 text-start mb-4">
+                    {% if profile.phone %}
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-telephone text-teal fs-5" style="width:20px;"></i>
+                        <span class="text-dark small">{{ profile.phone }}</span>
+                    </div>
+                    {% endif %}
+                    {% if profile.linkedin_url %}
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-linkedin text-teal fs-5" style="width:20px;"></i>
+                        <a href="{{ profile.linkedin_url }}" target="_blank" class="text-teal small text-decoration-none text-truncate">LinkedIn Profile</a>
+                    </div>
+                    {% endif %}
+                    {% if profile.github_url %}
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-github text-teal fs-5" style="width:20px;"></i>
+                        <a href="{{ profile.github_url }}" target="_blank" class="text-teal small text-decoration-none">GitHub Profile</a>
+                    </div>
+                    {% endif %}
+                </div>
+
+                {% if profile.resume_file %}
+                <a href="{{ profile.resume_file.url }}" target="_blank" class="btn btn-primary-custom w-100 fw-bold shadow-teal">
+                    <i class="bi bi-file-earmark-arrow-down me-2"></i> Download Resume
+                </a>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Skills Card -->
+        {% if profile.skills %}
+        <div class="card bg-white border-0 shadow-sm mb-4">
+            <div class="card-header bg-white border-bottom border-mint py-3">
+                <h6 class="fw-bold m-0 text-teal"><i class="bi bi-tools me-2"></i>Skills</h6>
+            </div>
+            <div class="card-body p-4">
+                <div class="d-flex flex-wrap gap-2">
+                    {% for skill in profile.skills %}
+                        <span class="badge badge-cream text-teal border-mint px-3 py-2 fw-600 rounded-pill">{{ skill }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Languages Card -->
+        {% if profile.languages %}
+        <div class="card bg-white border-0 shadow-sm">
+            <div class="card-header bg-white border-bottom border-mint py-3">
+                <h6 class="fw-bold m-0 text-teal"><i class="bi bi-translate me-2"></i>Languages</h6>
+            </div>
+            <div class="card-body p-4">
+                <div class="d-flex flex-wrap gap-2">
+                    {% for lang in profile.languages %}
+                        <span class="badge bg-light text-dark border fw-600 px-3 py-2 rounded-pill">{{ lang }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Main Content -->
+    <div class="col-lg-8">
+
+        <!-- Experience -->
+        {% if profile.experience_structured %}
+        <div class="card bg-white border-0 shadow-sm mb-4">
+            <div class="card-header bg-white border-bottom border-mint py-3">
+                <h5 class="fw-bold m-0 text-teal"><i class="bi bi-briefcase me-2"></i>Work Experience</h5>
+            </div>
+            <div class="card-body p-4">
+                {% for exp in profile.experience_structured %}
+                <div class="mb-4 pb-4 {% if not forloop.last %}border-bottom border-mint{% endif %}">
+                    <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+                        <div>
+                            <h6 class="fw-bold text-dark mb-1">{{ exp.title|default:exp.role|default:"Position" }}</h6>
+                            <p class="mb-1 fw-600" style="color: var(--teal);">{{ exp.company|default:exp.organization|default:"Company" }}</p>
+                        </div>
+                        {% if exp.duration or exp.dates %}
+                        <span class="badge badge-cream text-teal border-mint fw-600 px-3 py-2 small">
+                            <i class="bi bi-calendar me-1"></i>{{ exp.duration|default:exp.dates }}
+                        </span>
+                        {% endif %}
+                    </div>
+                    {% if exp.description %}
+                    <p class="text-muted small mt-2 mb-0" style="line-height: 1.7;">{{ exp.description }}</p>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Education -->
+        {% if profile.education_structured %}
+        <div class="card bg-white border-0 shadow-sm mb-4">
+            <div class="card-header bg-white border-bottom border-mint py-3">
+                <h5 class="fw-bold m-0 text-teal"><i class="bi bi-mortarboard me-2"></i>Education</h5>
+            </div>
+            <div class="card-body p-4">
+                {% for edu in profile.education_structured %}
+                <div class="mb-3 {% if not forloop.last %}pb-3 border-bottom border-mint{% endif %}">
+                    <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+                        <div>
+                            <h6 class="fw-bold text-dark mb-1">{{ edu.degree|default:edu.qualification|default:"Degree" }}</h6>
+                            <p class="mb-0 fw-600" style="color: var(--teal);">{{ edu.institution|default:edu.college|default:"Institution" }}</p>
+                        </div>
+                        {% if edu.year or edu.duration %}
+                        <span class="badge badge-cream text-teal border-mint fw-600 px-3 py-2 small">{{ edu.year|default:edu.duration }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Projects -->
+        {% if profile.projects_structured %}
+        <div class="card bg-white border-0 shadow-sm mb-4">
+            <div class="card-header bg-white border-bottom border-mint py-3">
+                <h5 class="fw-bold m-0 text-teal"><i class="bi bi-code-slash me-2"></i>Projects</h5>
+            </div>
+            <div class="card-body p-4">
+                {% for proj in profile.projects_structured %}
+                <div class="mb-3 {% if not forloop.last %}pb-3 border-bottom border-mint{% endif %}">
+                    <h6 class="fw-bold text-dark mb-1">{{ proj.name|default:proj.title|default:"Project" }}</h6>
+                    {% if proj.description %}
+                    <p class="text-muted small mb-0" style="line-height: 1.7;">{{ proj.description }}</p>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Certifications -->
+        {% if profile.certifications %}
+        <div class="card bg-white border-0 shadow-sm mb-4">
+            <div class="card-header bg-white border-bottom border-mint py-3">
+                <h5 class="fw-bold m-0 text-teal"><i class="bi bi-patch-check me-2"></i>Certifications</h5>
+            </div>
+            <div class="card-body p-4">
+                <ul class="list-unstyled mb-0">
+                    {% for cert in profile.certifications %}
+                    <li class="d-flex align-items-center gap-2 mb-2">
+                        <i class="bi bi-check-circle-fill text-teal"></i>
+                        <span class="text-dark small fw-600">{{ cert }}</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Application History -->
+        <div class="card bg-white border-0 shadow-sm">
+            <div class="card-header bg-white border-bottom border-mint py-3">
+                <h5 class="fw-bold m-0 text-teal"><i class="bi bi-clock-history me-2"></i>Application History</h5>
+            </div>
+            <div class="card-body p-0">
+                {% if applications %}
+                <ul class="list-group list-group-flush">
+                    {% for app in applications %}
+                    <li class="list-group-item bg-white d-flex justify-content-between align-items-center px-4 py-3">
+                        <div>
+                            <h6 class="fw-bold text-dark mb-0">{{ app.job.title }}</h6>
+                            <p class="text-muted small mb-0">{{ app.job.company.name }} · {{ app.applied_at|date:"M d, Y" }}</p>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge rounded-pill px-3 fw-600
+                                {% if app.status == 'OFFER' %}bg-success text-white
+                                {% elif app.status == 'REJECTED' %}bg-danger text-white
+                                {% elif app.status in 'SHORTLISTED,INTERVIEW,HR_ROUND' %}badge-teal
+                                {% else %}bg-secondary text-white{% endif %}">
+                                {{ app.get_status_display }}
+                            </span>
+                            <a href="{% url 'application_workflow' app.pk %}" class="btn btn-sm btn-outline-teal fw-600">
+                                <i class="bi bi-diagram-3"></i>
+                            </a>
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="bi bi-inbox text-muted fs-1 d-block mb-2"></i>
+                    <p class="text-muted small mb-0">This candidate has not applied to any jobs yet.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<style>
+    .btn-outline-teal { border-color: var(--teal); color: var(--teal); }
+    .btn-outline-teal:hover { background: var(--teal); color: white; }
+    .badge-teal { background: var(--teal); color: white; }
+</style>
+{% endblock %}

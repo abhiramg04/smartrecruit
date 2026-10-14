@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+{% load assessment_tags %}
+
+{% block title %}Coding Assessments - SmartRecruit{% endblock %}
+
+{% block content %}
+<div class="page-header animate-fade-in d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+    <div>
+        <h2 class="fw-bold m-0" style="color: #1F6B5C !important;">Coding Assessments</h2>
+        <p class="mb-0 fw-600" style="color: #3D7A70 !important;">Test your skills and climb the leaderboard</p>
+    </div>
+</div>
+
+<div class="row g-4 animate-children">
+    <!-- Left Column: Available Assessments -->
+    <div class="col-lg-8">
+        <h5 class="fw-bold text-deep-teal mb-3"><i class="bi bi-laptop me-2"></i>Available Assessments</h5>
+        
+        {% if assessments %}
+            <div class="row g-3">
+                {% for assessment in assessments %}
+                <div class="col-md-6">
+                    <div class="card bg-white border-0 shadow-sm h-100 hover-lift" style="border-top: 4px solid var(--teal) !important;">
+                        <div class="card-body p-4 d-flex flex-column">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h5 class="fw-bold text-dark mb-0">{{ assessment.title }}</h5>
+                                <span class="badge badge-cream text-teal border-mint"><i class="bi bi-clock me-1"></i>{{ assessment.duration_minutes }}m</span>
+                            </div>
+                            
+                            <p class="text-muted small mb-4 flex-grow-1">{{ assessment.description|truncatewords:20 }}</p>
+                            
+                            <div class="d-flex align-items-center justify-content-between mt-auto pt-3 border-top border-mint">
+                                <div class="small fw-600 text-teal">
+                                    <i class="bi bi-code-slash me-1"></i> {{ assessment.questions.count }} Question{{ assessment.questions.count|pluralize }}
+                                </div>
+                                <a href="{% url 'assessments:take_assessment' assessment.id %}" class="btn btn-sm btn-primary-custom fw-bold px-3 shadow-teal">
+                                    Start Test <i class="bi bi-arrow-right ms-1"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="card bg-white border-0 shadow-sm text-center py-5">
+                <div class="card-body">
+                    <div class="mx-auto mb-3 d-flex align-items-center justify-content-center rounded-circle" 
+                         style="width: 64px; height: 64px; background: var(--mint-light); color: var(--teal);">
+                        <i class="bi bi-emoji-smile fs-2"></i>
+                    </div>
+                    <h5 class="fw-bold text-dark mb-1">No Assessments Available</h5>
+                    <p class="text-muted small">You're all caught up! Check back later for new coding challenges.</p>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+    
+    <!-- Right Column: Leaderboards -->
+    <div class="col-lg-4">
+        <h5 class="fw-bold text-deep-teal mb-3"><i class="bi bi-trophy me-2"></i>Leaderboards</h5>
+        
+        {% if assessments %}
+            {% for assessment in assessments %}
+            <div class="card bg-white border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-bottom border-mint py-3">
+                    <h6 class="fw-bold m-0 text-teal mb-0">{{ assessment.title }}</h6>
+                </div>
+                <div class="card-body bg-white p-0 rounded-bottom">
+                    <ul class="list-group list-group-flush rounded-bottom">
+                        {% with subs=leaderboards|get_item:assessment.id %}
+                            {% if subs %}
+                                {% for sub in subs %}
+                                    <li class="list-group-item bg-white d-flex justify-content-between align-items-center px-4 py-3 border-light">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <span class="fw-bold {% if forloop.counter == 1 %}text-warning{% elif forloop.counter == 2 %}text-secondary{% elif forloop.counter == 3 %}text-danger{% else %}text-muted{% endif %}" style="width: 20px;">
+                                                #{{ forloop.counter }}
+                                            </span>
+                                            <span class="fw-600 text-dark small">
+                                                {{ sub.application.candidate.user.get_full_name|default:sub.application.candidate.user.username }}
+                                            </span>
+                                        </div>
+                                        <span class="badge bg-teal rounded-pill text-white px-2 py-1">{{ sub.final_score|floatformat:1 }}%</span>
+                                    </li>
+                                {% endfor %}
+                            {% else %}
+                                <li class="list-group-item bg-white text-center text-muted py-4 small">
+                                    <i class="bi bi-flag text-mint fs-3 d-block mb-2"></i>
+                                    No submissions yet. Be the first!
+                                </li>
+                            {% endif %}
+                        {% endwith %}
+                    </ul>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="card bg-white border-0 shadow-sm text-center py-4">
+                <p class="text-muted small mb-0">Leaderboards will appear here.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+    .hover-lift:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px rgba(45, 139, 123, 0.15) !important;
+    }
+    .bg-teal {
+        background-color: var(--teal) !important;
+    }
+    .text-mint {
+        color: var(--mint) !important;
+    }
+</style>
+{% endblock %}

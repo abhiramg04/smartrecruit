@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Interview Summary - {{ summary.application.candidate.user.get_full_name }}</title>
+    <style>
+        body { font-family: Helvetica, sans-serif; font-size: 12px; color: #333; }
+        h1 { color: #2c3e50; border-bottom: 2px solid #2c3e50; padding-bottom: 5px; }
+        h2 { color: #2980b9; margin-top: 20px; }
+        .score-box { border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; background-color: #f9f9f9; width: 30%; display: inline-block; text-align: center; }
+        .score-box h3 { margin: 0; font-size: 14px; color: #7f8c8d; }
+        .score-box p { margin: 5px 0 0 0; font-size: 24px; font-weight: bold; color: #27ae60; }
+        table { width: 100%; margin-top: 15px; border-collapse: collapse; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; color: #333; }
+        .recommendation { background-color: #e8f8f5; border-left: 5px solid #1abc9c; padding: 10px; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <h1>AI Interview Summary</h1>
+    <p><strong>Candidate:</strong> {{ summary.application.candidate.user.get_full_name }}</p>
+    <p><strong>Job Applied:</strong> {{ summary.application.job.title }}</p>
+    <p><strong>Date:</strong> {{ summary.created_at|date:"F j, Y" }}</p>
+    
+    <div>
+        <div class="score-box">
+            <h3>Communication</h3>
+            <p>{{ summary.communication_score }}</p>
+        </div>
+        <div class="score-box">
+            <h3>Technical</h3>
+            <p>{{ summary.technical_score }}</p>
+        </div>
+        <div class="score-box">
+            <h3>Confidence</h3>
+            <p>{{ summary.confidence_score }}</p>
+        </div>
+    </div>
+    
+    <h2>Overall Summary</h2>
+    <p>{{ summary.summary }}</p>
+    
+    <table>
+        <tr>
+            <th style="width: 50%;">Key Strengths</th>
+            <th style="width: 50%;">Areas for Improvement</th>
+        </tr>
+        <tr>
+            <td valign="top">
+                <ul>
+                    {% for s in summary.strengths %}
+                    <li>{{ s }}</li>
+                    {% endfor %}
+                </ul>
+            </td>
+            <td valign="top">
+                <ul>
+                    {% for w in summary.weaknesses %}
+                    <li>{{ w }}</li>
+                    {% endfor %}
+                </ul>
+            </td>
+        </tr>
+    </table>
+    
+    <div class="recommendation">
+        <h3 style="margin-top: 0;">Recommendation: {{ summary.hiring_recommendation }}</h3>
+        <p><strong>Next Round Suggestion:</strong> {{ summary.next_round_suggestion }}</p>
+    </div>
+</body>
+</html>

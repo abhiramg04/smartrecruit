@@ -1,0 +1,322 @@
+{% extends 'base.html' %}
+
+{% block title %}AI Model Management – SmartRecruit Admin{% endblock %}
+
+{% block content %}
+<style>
+    .config-card {
+        background: rgba(128, 128, 128, 0.03);
+        border: 1px solid rgba(128, 128, 128, 0.15);
+        border-radius: 1rem;
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        overflow: hidden;
+        position: relative;
+    }
+    
+    .config-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+        border-color: rgba(128, 128, 128, 0.25);
+    }
+    
+    .config-card::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0; height: 3px;
+        background: linear-gradient(90deg, var(--accent), transparent);
+        opacity: 0.8;
+    }
+
+    .config-card.danger-card::before {
+        background: linear-gradient(90deg, #dc3545, transparent);
+    }
+
+    .section-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(128, 128, 128, 0.1);
+        font-size: 1.25rem;
+        color: var(--accent);
+        margin-bottom: 1rem;
+    }
+
+    .danger-card .section-icon {
+        color: #dc3545;
+        background: rgba(220, 53, 69, 0.1);
+    }
+
+    .form-control {
+        background-color: rgba(128, 128, 128, 0.05);
+        border: 1px solid rgba(128, 128, 128, 0.2);
+        color: var(--text-primary);
+        border-radius: 0.5rem;
+        padding: 0.75rem 1rem;
+        transition: all 0.2s ease;
+    }
+
+    .form-control:focus {
+        background-color: rgba(128, 128, 128, 0.08);
+        border-color: var(--accent);
+        box-shadow: 0 0 0 0.25rem rgba(var(--accent-rgb), 0.25);
+        color: var(--text-primary);
+    }
+
+    .form-control::placeholder {
+        color: rgba(128, 128, 128, 0.6);
+    }
+
+    .action-bar {
+        position: sticky;
+        bottom: 2rem;
+        background: rgba(128, 128, 128, 0.05);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        padding: 1rem 1.5rem;
+        border-radius: 1rem;
+        border: 1px solid rgba(128, 128, 128, 0.15);
+        z-index: 100;
+        box-shadow: 0 -4px 24px rgba(0,0,0,0.1);
+    }
+
+    .save-btn {
+        padding: 0.75rem 2rem;
+        border-radius: 0.5rem;
+        font-weight: 500;
+        letter-spacing: 0.5px;
+        background: linear-gradient(135deg, var(--accent), #2b7a78);
+        border: none;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        transition: all 0.3s ease;
+    }
+
+    .save-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+    }
+</style>
+
+<div class="animate-fade-in">
+
+    <!-- Page Header -->
+    <div class="page-header mb-5">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+            <div>
+                <h1 class="mb-1 fw-bold" style="font-size:1.75rem; letter-spacing: -0.5px;">
+                    <i class="bi bi-robot text-accent me-2"></i> AI Model Management
+                </h1>
+                <p class="mb-0 text-secondary" style="font-size:0.95rem;">
+                    Manage AI models, tuning parameters, and API credentials.
+                </p>
+            </div>
+            <div style="position: relative; z-index: 10;">
+                <a href="{% url 'admin_dashboard' %}" class="btn btn-outline-secondary d-flex align-items-center gap-2" style="border-radius: 0.5rem;">
+                    <i class="bi bi-arrow-left"></i> Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Configuration Form -->
+    <form method="post" novalidate>
+        {% csrf_token %}
+        <div class="row g-4">
+            
+            <!-- General Settings Column -->
+            <div class="col-lg-7">
+                <div class="config-card p-4 h-100">
+                    <div class="d-flex align-items-center gap-3 mb-4">
+                        <div class="section-icon mb-0">
+                            <i class="bi bi-cpu"></i>
+                        </div>
+                        <h5 class="fw-bold mb-0" style="color: var(--text-primary);">Model Settings</h5>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-4">
+                            <label for="{{ form.default_model.id_for_label }}" class="form-label small text-uppercase fw-bold tracking-wide" style="color: var(--text-secondary);">
+                                Default Model
+                            </label>
+                            {{ form.default_model }}
+                            {% if form.default_model.errors %}
+                                <div class="invalid-feedback d-block mt-2">
+                                    {% for error in form.default_model.errors %}
+                                        <i class="bi bi-exclamation-triangle-fill me-1"></i> {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text mt-2" style="color: var(--text-secondary);">
+                                Used for complex reasoning and analysis tasks.
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 mb-4">
+                            <label for="{{ form.fast_model.id_for_label }}" class="form-label small text-uppercase fw-bold tracking-wide" style="color: var(--text-secondary);">
+                                Fast Model
+                            </label>
+                            {{ form.fast_model }}
+                            {% if form.fast_model.errors %}
+                                <div class="invalid-feedback d-block mt-2">
+                                    {% for error in form.fast_model.errors %}
+                                        <i class="bi bi-exclamation-triangle-fill me-1"></i> {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text mt-2" style="color: var(--text-secondary);">
+                                Used for quick generation and simple tasks.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.temperature.id_for_label }}" class="form-label small text-uppercase fw-bold tracking-wide" style="color: var(--text-secondary);">
+                                Temperature (0.0 - 2.0)
+                            </label>
+                            {{ form.temperature }}
+                            {% if form.temperature.errors %}
+                                <div class="invalid-feedback d-block mt-2">
+                                    {% for error in form.temperature.errors %}
+                                        <i class="bi bi-exclamation-triangle-fill me-1"></i> {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text mt-2" style="color: var(--text-secondary);">
+                                Lower values are more deterministic.
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.max_tokens.id_for_label }}" class="form-label small text-uppercase fw-bold tracking-wide" style="color: var(--text-secondary);">
+                                Max Tokens
+                            </label>
+                            {{ form.max_tokens }}
+                            {% if form.max_tokens.errors %}
+                                <div class="invalid-feedback d-block mt-2">
+                                    {% for error in form.max_tokens.errors %}
+                                        <i class="bi bi-exclamation-triangle-fill me-1"></i> {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text mt-2" style="color: var(--text-secondary);">
+                                Maximum length of generated output.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Access Control & Feature Toggles Column -->
+            <div class="col-lg-5">
+                <div class="config-card danger-card p-4 mb-4">
+                    <div class="d-flex align-items-center gap-3 mb-4">
+                        <div class="section-icon mb-0">
+                            <i class="bi bi-shield-lock"></i>
+                        </div>
+                        <h5 class="fw-bold mb-0" style="color: var(--text-primary);">API Credentials & Secret Management</h5>
+                    </div>
+
+                    <div class="alert alert-success border-0 small mb-3">
+                        <i class="bi bi-shield-check me-1"></i> <strong>Secret Protected:</strong> Raw API keys are securely managed in backend environment files (`.env`) and are never exposed in plain text to the browser.
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.groq_api_key.id_for_label }}" class="form-label small text-uppercase fw-bold tracking-wide" style="color: var(--text-secondary);">
+                            Override API Key (Optional Secret Masked)
+                        </label>
+                        {{ form.groq_api_key }}
+                        {% if form.groq_api_key.errors %}
+                            <div class="invalid-feedback d-block mt-2">
+                                {% for error in form.groq_api_key.errors %}
+                                    <i class="bi bi-exclamation-triangle-fill me-1"></i> {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <div class="form-text mt-2" style="color: var(--text-secondary);">
+                            Leave blank to use system environment variable (`GROQ_API_KEY`).
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Feature Configuration Toggles -->
+                <div class="config-card p-4">
+                    <div class="d-flex align-items-center gap-3 mb-4">
+                        <div class="section-icon mb-0">
+                            <i class="bi bi-toggle-on"></i>
+                        </div>
+                        <h5 class="fw-bold mb-0" style="color: var(--text-primary);">AI Feature Toggles</h5>
+                    </div>
+
+                    <div class="form-check form-switch mb-3">
+                        {{ form.enable_resume_parsing }}
+                        <label class="form-check-label fw-bold small ms-2" for="{{ form.enable_resume_parsing.id_for_label }}">
+                            Enable AI Resume Parsing
+                        </label>
+                        <div class="form-text">Triggers structured extraction from candidate resumes.</div>
+                    </div>
+
+                    <div class="form-check form-switch mb-3">
+                        {{ form.enable_ai_ranking }}
+                        <label class="form-check-label fw-bold small ms-2" for="{{ form.enable_ai_ranking.id_for_label }}">
+                            Enable Two-Layer Candidate Ranking
+                        </label>
+                        <div class="form-text">Semantic scoring + Groq recommendation engine.</div>
+                    </div>
+
+                    <div class="form-check form-switch mb-3">
+                        {{ form.enable_interview_gen }}
+                        <label class="form-check-label fw-bold small ms-2" for="{{ form.enable_interview_gen.id_for_label }}">
+                            Enable AI Interview Question Generation
+                        </label>
+                        <div class="form-text">Generates custom question sets for scheduled interviews.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Prompt Templates Section -->
+            <div class="col-12">
+                <div class="config-card p-4">
+                    <div class="d-flex align-items-center gap-3 mb-4">
+                        <div class="section-icon mb-0">
+                            <i class="bi bi-file-earmark-code"></i>
+                        </div>
+                        <h5 class="fw-bold mb-0" style="color: var(--text-primary);">Prompt Templates</h5>
+                    </div>
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <label class="form-label small text-uppercase fw-bold tracking-wide" style="color: var(--text-secondary);">
+                                Resume Parsing System Prompt
+                            </label>
+                            {{ form.resume_parser_prompt }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small text-uppercase fw-bold tracking-wide" style="color: var(--text-secondary);">
+                                Candidate Ranking & Suitability Prompt
+                            </label>
+                            {{ form.ranking_prompt }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Bar -->
+            <div class="col-12">
+                <div class="action-bar d-flex justify-content-between align-items-center flex-wrap gap-3 mt-3">
+                    <span class="small" style="color: var(--text-secondary);">
+                        <i class="bi bi-info-circle me-1"></i> Changes will take effect immediately across the platform.
+                    </span>
+                    <button type="submit" class="btn btn-primary save-btn d-flex align-items-center gap-2 text-white">
+                        <i class="bi bi-cloud-arrow-up-fill"></i> Save Configuration
+                    </button>
+                </div>
+            </div>
+            
+        </div>
+    </form>
+</div>
+{% endblock %}

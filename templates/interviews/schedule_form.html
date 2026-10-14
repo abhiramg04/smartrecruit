@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+
+{% block title %}Schedule Interview - SmartRecruit{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card border-0 shadow-sm rounded-lg">
+            <div class="card-header bg-white border-bottom border-mint py-3 text-center">
+                <h4 class="fw-bold m-0 text-teal">Schedule Interview</h4>
+                <p class="text-muted small mb-0">For {{ application.candidate.user.get_full_name }} ({{ application.job.title }})</p>
+            </div>
+            
+            <div class="card-body p-4">
+                <form method="POST">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label for="scheduled_time" class="form-label fw-600 text-deep-teal">Date & Time</label>
+                        <input type="datetime-local" class="form-control" id="scheduled_time" name="scheduled_time" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="duration_minutes" class="form-label fw-600 text-deep-teal">Duration (Minutes)</label>
+                        <select class="form-select" id="duration_minutes" name="duration_minutes">
+                            <option value="30">30 Minutes</option>
+                            <option value="45">45 Minutes</option>
+                            <option value="60" selected>60 Minutes (1 Hour)</option>
+                            <option value="90">90 Minutes (1.5 Hours)</option>
+                            <option value="120">120 Minutes (2 Hours)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="meeting_link" class="form-label fw-600 text-deep-teal">Meeting Link (Optional)</label>
+                        <input type="url" class="form-control" id="meeting_link" name="meeting_link" placeholder="e.g. https://zoom.us/j/123456789">
+                        <div class="form-text small">Zoom, Google Meet, or Teams link.</div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="notes" class="form-label fw-600 text-deep-teal">Instructions for Candidate (Optional)</label>
+                        <textarea class="form-control" id="notes" name="notes" rows="3" placeholder="e.g. Please be prepared to write code in your preferred language."></textarea>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{% url 'application_workflow' application.pk %}" class="btn btn-outline-secondary px-4 fw-600">Cancel</a>
+                        <button type="submit" class="btn btn-primary-custom px-4 fw-bold shadow-teal">
+                            <i class="bi bi-calendar-check me-1"></i> Schedule Interview
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

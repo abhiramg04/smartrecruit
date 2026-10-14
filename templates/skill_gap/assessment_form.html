@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+
+{% block title %}Create Technical Assessment – SmartRecruit{% endblock %}
+
+{% block content %}
+<div class="animate-fade-in max-w-2xl mx-auto">
+    <div class="page-header mb-4">
+        <h1 class="fw-bold m-0" style="color: var(--cream);">Create Skill Assessment</h1>
+        <p class="mb-0 text-white-50">Build a technical assessment test suite for your job postings.</p>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-lg p-4" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1);">
+        <form method="post">
+            {% csrf_token %}
+            
+            <div class="mb-3">
+                <label class="form-label fw-bold text-white">Target Job Role</label>
+                <select name="job_id" class="form-select bg-dark text-white border-secondary" required>
+                    <option value="">-- Select Job Posting --</option>
+                    {% for job in jobs %}
+                        <option value="{{ job.pk }}">{{ job.title }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label fw-bold text-white">Assessment Title</label>
+                <input type="text" name="title" class="form-control bg-dark text-white border-secondary" placeholder="e.g. Senior Backend Python & SQL Test" required>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label fw-bold text-white">Description</label>
+                <textarea name="description" class="form-control bg-dark text-white border-secondary" rows="3" placeholder="Brief overview of evaluation criteria..."></textarea>
+            </div>
+
+            <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <label class="form-label fw-bold text-white">Duration (Minutes)</label>
+                    <input type="number" name="duration_minutes" class="form-control bg-dark text-white border-secondary" value="30" min="5" max="180" required>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-bold text-white">Passing Score (%)</label>
+                    <input type="number" name="passing_score" class="form-control bg-dark text-white border-secondary" value="70" min="10" max="100" required>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-end gap-2">
+                <a href="{% url 'assessment_list' %}" class="btn btn-outline-light px-4">Cancel</a>
+                <button type="submit" class="btn btn-primary-custom px-4 fw-bold shadow-teal">Save & Publish Test</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

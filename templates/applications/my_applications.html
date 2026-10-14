@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+
+{% block title %}My Applications - SmartRecruit{% endblock %}
+
+{% block content %}
+<div class="page-header animate-fade-in d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+    <div>
+        <h1 class="fw-bold m-0" style="color: var(--cream);">My Applications</h1>
+        <p class="mb-0" style="color: rgba(254,255,214,0.85);">Track and manage your job applications</p>
+    </div>
+    <a href="{% url 'job_list' %}" class="btn btn-primary-custom fw-bold shadow-teal">
+        <i class="bi bi-search me-1"></i> Browse Jobs
+    </a>
+</div>
+
+{% if applications %}
+    <div class="row g-4 animate-children">
+        {% for app in applications %}
+        <div class="col-12">
+            <div class="card border-0 shadow-sm rounded-lg hover-lift" style="transition: transform 0.2s ease, box-shadow 0.2s ease;">
+                <div class="card-body p-4">
+                    <div class="row align-items-center g-3">
+                        
+                        <!-- Job Info -->
+                        <div class="col-md-5">
+                            <h5 class="fw-bold text-dark mb-1">
+                                <a href="{% url 'job_detail' app.job.pk %}" class="text-decoration-none text-dark">{{ app.job.title }}</a>
+                            </h5>
+                            <p class="mb-2" style="color: var(--teal); font-weight: 600;">
+                                <i class="bi bi-building me-1"></i> {{ app.job.company.name }}
+                            </p>
+                            <div class="d-flex flex-wrap gap-3 text-muted small">
+                                <span><i class="bi bi-geo-alt me-1 text-teal"></i>{{ app.job.location|default:"N/A" }}</span>
+                                <span><i class="bi bi-briefcase me-1 text-teal"></i>{{ app.job.get_employment_type_display }}</span>
+                                <span><i class="bi bi-clock me-1 text-teal"></i>Applied {{ app.applied_at|timesince }} ago</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Status Badge -->
+                        <div class="col-md-3 text-md-center">
+                            <span class="badge rounded-pill px-3 py-2 fw-600 border 
+                                {% if app.status == 'OFFER' %} bg-success text-white border-success
+                                {% elif app.status == 'REJECTED' %} bg-danger text-white border-danger
+                                {% elif app.status in 'SCREENING,ASSESSMENT' %} badge-cream border-cream
+                                {% elif app.status in 'SHORTLISTED,INTERVIEW,HR_ROUND' %} badge-teal border-teal
+                                {% else %} bg-secondary text-white border-secondary {% endif %}" 
+                                style="font-size: 0.85rem;">
+                                {% if app.status == 'OFFER' %} <i class="bi bi-trophy me-1"></i>
+                                {% elif app.status == 'REJECTED' %} <i class="bi bi-x-circle me-1"></i>
+                                {% elif app.status in 'SHORTLISTED,INTERVIEW,HR_ROUND' %} <i class="bi bi-star me-1"></i>
+                                {% else %} <i class="bi bi-clock-history me-1"></i> {% endif %}
+                                {{ app.get_status_display }}
+                            </span>
+                        </div>
+                        
+                        <!-- AI Match Score & Action -->
+                        <div class="col-md-4 text-md-end border-start-md ps-md-4">
+                            <div class="d-flex align-items-center justify-content-md-end justify-content-between mb-2">
+                                <span class="text-muted small fw-600 me-2">AI Match Score:</span>
+                                {% if app.ranking_result %}
+                                    <span class="fw-bold fs-5 
+                                        {% if app.ranking_result.overall_score >= 70 %}text-success
+                                        {% elif app.ranking_result.overall_score >= 45 %}text-warning
+                                        {% else %}text-danger{% endif %}">
+                                        {{ app.ranking_result.overall_score|floatformat:1 }}%
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-light text-muted border px-2 py-1">Pending</span>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="d-flex justify-content-md-end justify-content-between gap-2 mt-3">
+                                {% if app.ranking_result %}
+                                    <a href="{% url 'ranking_result' app.ranking_result.pk %}" class="btn btn-sm btn-outline-teal fw-600 px-3">
+                                        <i class="bi bi-bar-chart me-1"></i> AI Report
+                                    </a>
+                                {% endif %}
+                                <a href="{% url 'application_workflow' app.pk %}" class="btn btn-sm btn-outline-primary fw-600 px-3">
+                                    <i class="bi bi-diagram-3 me-1"></i> Timeline
+                                </a>
+                            </div>
+                        </div>
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="card border-0 shadow-sm text-center py-5 mt-4">
+        <div class="card-body py-5">
+            <div class="mx-auto mb-4 d-flex align-items-center justify-content-center rounded-circle" 
+                 style="width: 80px; height: 80px; background: var(--mint-light); color: var(--teal);">
+                <i class="bi bi-inbox fs-1"></i>
+            </div>
+            <h4 class="fw-bold text-dark mb-2">No Applications Yet</h4>
+            <p class="text-muted mb-4 max-w-md mx-auto">You haven't applied to any jobs yet. Browse open positions and submit your first application to kickstart your career journey.</p>
+            <a href="{% url 'job_list' %}" class="btn btn-primary-custom px-4 py-2 fw-bold shadow-teal">
+                <i class="bi bi-search me-2"></i> Browse Jobs
+            </a>
+        </div>
+    </div>
+{% endif %}
+
+<style>
+    .hover-lift:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 20px rgba(45, 139, 123, 0.1) !important;
+    }
+    @media (min-width: 768px) {
+        .border-start-md {
+            border-left: 1px solid var(--border);
+        }
+    }
+</style>
+{% endblock %}

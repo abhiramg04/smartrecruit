@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+
+{% block title %}My Technical Skill Assessments – SmartRecruit{% endblock %}
+
+{% block content %}
+<div class="animate-fade-in">
+    <div class="page-header mb-4">
+        <h1 class="fw-bold m-0" style="color: var(--cream);">My Skill Assessments</h1>
+        <p class="mb-0 text-white-50">Complete technical skill assessments assigned by recruiters for job applications.</p>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-lg" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1);">
+        <div class="card-body p-0">
+            {% if assessments %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0" style="color: var(--text-primary);">
+                    <thead style="background: rgba(255,255,255,0.05);">
+                        <tr>
+                            <th class="ps-4">Assessment Title</th>
+                            <th>Job Role</th>
+                            <th>Duration</th>
+                            <th>Status</th>
+                            <th>Score</th>
+                            <th class="pe-4 text-end">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for ca in assessments %}
+                        <tr>
+                            <td class="ps-4 fw-bold text-white">{{ ca.test.title }}</td>
+                            <td><span class="badge badge-cream text-teal">{{ ca.test.job.title }}</span></td>
+                            <td><i class="bi bi-clock me-1 text-muted"></i>{{ ca.test.duration_minutes }} mins</td>
+                            <td>
+                                {% if ca.status == 'COMPLETED' %}
+                                    <span class="badge bg-success bg-opacity-20 text-success">Completed</span>
+                                {% else %}
+                                    <span class="badge bg-warning bg-opacity-20 text-warning">Assigned</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if ca.status == 'COMPLETED' %}
+                                    <span class="fw-bold {% if ca.passed %}text-success{% else %}text-danger{% endif %}">{{ ca.score }}%</span>
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td class="pe-4 text-end">
+                                {% if ca.status != 'COMPLETED' %}
+                                    <a href="{% url 'assessment_take' ca.pk %}" class="btn btn-sm btn-primary-custom px-3 fw-bold">
+                                        Take Assessment <i class="bi bi-arrow-right ms-1"></i>
+                                    </a>
+                                {% else %}
+                                    <span class="text-white-50 small"><i class="bi bi-check-circle-fill text-success me-1"></i> Submitted</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="p-5 text-center text-white-50">
+                <i class="bi bi-clipboard-check fs-1 d-block mb-3 opacity-50"></i>
+                <h5 class="fw-bold text-white">No Assessments Assigned</h5>
+                <p class="mb-0">You currently have no pending technical skill assessments.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

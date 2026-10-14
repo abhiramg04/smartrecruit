@@ -1,0 +1,530 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}SmartRecruit - Generative AI-Powered Recruitment Platform{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Custom Keyframes & Animations */
+    @keyframes float {
+        0% { transform: translateY(0px) rotate(2deg); }
+        50% { transform: translateY(-10px) rotate(1deg); }
+        100% { transform: translateY(0px) rotate(2deg); }
+    }
+    
+    @keyframes pulse-glow {
+        0% { box-shadow: 0 0 0 0 rgba(143, 223, 212, 0.4); }
+        70% { box-shadow: 0 0 0 15px rgba(143, 223, 212, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(143, 223, 212, 0); }
+    }
+
+    @keyframes scan {
+        0% { top: 0%; opacity: 0.8; }
+        50% { top: 100%; opacity: 0.8; }
+        100% { top: 0%; opacity: 0.8; }
+    }
+
+    .animate-float {
+        animation: float 6s ease-in-out infinite;
+    }
+
+    .pulse-ring {
+        animation: pulse-glow 2s infinite;
+    }
+
+    /* Scanner line overlay for mock resume card */
+    .scanner-container {
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .scanner-line {
+        position: absolute;
+        left: 0;
+        width: 100%;
+        height: 3px;
+        background: linear-gradient(90deg, rgba(143, 223, 212, 0) 0%, rgba(143, 223, 212, 0.8) 50%, rgba(143, 223, 212, 0) 100%);
+        box-shadow: 0 0 8px rgba(143, 223, 212, 0.8);
+        animation: scan 4s infinite linear;
+        z-index: 5;
+    }
+
+    /* Interactive Sandbox tags */
+    .sandbox-tag {
+        cursor: pointer;
+        padding: 0.5rem 1.2rem;
+        border-radius: 999px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        background: rgba(91, 174, 160, 0.08);
+        border: 1px solid rgba(91, 174, 160, 0.25);
+        color: var(--text-secondary);
+        transition: var(--transition);
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        user-select: none;
+    }
+
+    .sandbox-tag:hover {
+        background: rgba(91, 174, 160, 0.15);
+        transform: translateY(-2px);
+    }
+
+    .sandbox-tag.active {
+        background: var(--deep-teal);
+        border-color: var(--deep-teal);
+        color: #fff;
+        box-shadow: 0 4px 12px rgba(45, 139, 123, 0.3);
+    }
+
+    /* Glassmorphism Feature Cards */
+    .feature-card {
+        background: var(--glass-bg);
+        border: 1px solid var(--glass-border);
+        border-radius: 24px !important;
+        box-shadow: var(--glass-shadow);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s ease;
+    }
+
+    .feature-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 15px 35px rgba(45, 139, 123, 0.16);
+    }
+
+    .feature-icon-wrapper {
+        width: 60px;
+        height: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 16px;
+        background: var(--mint-light);
+        color: var(--deep-teal);
+        font-size: 1.5rem;
+        margin-bottom: 1.5rem;
+        transition: var(--transition);
+    }
+
+    .feature-card:hover .feature-icon-wrapper {
+        background: var(--deep-teal);
+        color: #fff;
+        transform: scale(1.1) rotate(5deg);
+    }
+
+    /* Job Card Styling */
+    .job-card {
+        background: white;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        transition: var(--transition);
+        overflow: hidden;
+    }
+
+    .job-card:hover {
+        border-color: var(--teal);
+        box-shadow: 0 10px 25px rgba(45, 139, 123, 0.1);
+        transform: translateY(-4px);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container px-4">
+    
+    <!-- Hero Section -->
+    <div class="row align-items-center py-5 mb-5" style="min-height: 80vh;">
+        <!-- Hero Text -->
+        <div class="col-lg-6 pe-lg-5 mb-5 mb-lg-0 animate-fade-in">
+            <div class="badge rounded-pill mb-3 px-3 py-2 fw-600" style="background: var(--mint-light); color: var(--deep-teal); border: 1px solid var(--mint);">
+                <i class="bi bi-cpu-fill me-2 pulse-ring"></i> Generative AI Recruiting
+            </div>
+            <h1 class="display-3 fw-bold mb-4" style="color: var(--deep-teal); letter-spacing: -1.5px; line-height: 1.1;">
+                Supercharge Your <br>
+                <span style="color: var(--teal); position: relative; display: inline-block;">
+                    Talent Search
+                    <svg viewBox="0 0 200 20" style="position: absolute; bottom: -10px; left: 0; width: 100%; height: 20px; z-index: -1;">
+                        <path d="M 0 10 Q 100 20 200 10" fill="transparent" stroke="var(--mint)" stroke-width="8" stroke-linecap="round"/>
+                    </svg>
+                </span>
+            </h1>
+            <p class="lead mb-5 text-muted" style="font-size: 1.2rem; font-weight: 500; max-width: 500px; line-height: 1.7;">
+                Instantly parse resumes, rank applicants, run automated assessments, and analyze matching gaps with state-of-the-art LLM pipelines.
+            </p>
+            
+            <div class="d-flex flex-column flex-sm-row gap-3">
+                {% if not user.is_authenticated %}
+                    <a href="{% url 'register' %}" class="btn btn-primary-custom btn-lg fw-bold px-5 py-3 rounded-pill shadow-teal hover-lift">
+                        Get Started Free
+                    </a>
+                {% else %}
+                    <a href="{% url 'analytics_dashboard' %}" class="btn btn-primary-custom btn-lg fw-bold px-5 py-3 rounded-pill shadow-teal hover-lift">
+                        Go to Dashboard
+                    </a>
+                {% endif %}
+                <a href="#demo-sandbox" class="btn btn-lg fw-bold px-5 py-3 rounded-pill hover-lift bg-white border border-teal text-teal">
+                    Try AI Sandbox
+                </a>
+            </div>
+            
+            <div class="mt-5 d-flex align-items-center gap-4">
+                <div class="d-flex -space-x-2">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center fw-bold shadow-sm" style="width: 40px; height: 40px; background: var(--cream); color: var(--deep-teal); border: 2px solid white; z-index: 3;">M</div>
+                    <div class="rounded-circle d-flex align-items-center justify-content-center fw-bold shadow-sm" style="width: 40px; height: 40px; background: var(--mint-light); color: var(--deep-teal); border: 2px solid white; z-index: 2; margin-left: -10px;">K</div>
+                    <div class="rounded-circle d-flex align-items-center justify-content-center fw-bold shadow-sm" style="width: 40px; height: 40px; background: var(--teal); color: #fff; border: 2px solid white; z-index: 1; margin-left: -10px;">A</div>
+                </div>
+                <p class="mb-0 small fw-600 text-muted">Empowering modern recruitment teams globally.</p>
+            </div>
+        </div>
+        
+        <!-- Hero Interactive Parser Simulation -->
+        <div class="col-lg-6 position-relative">
+            <div class="position-absolute rounded-circle" style="width: 500px; height: 500px; background: linear-gradient(135deg, var(--mint-light), transparent); top: -50px; right: -50px; z-index: 0; filter: blur(50px); opacity: 0.7;"></div>
+            
+            <div class="position-relative z-1 d-flex justify-content-center animate-float">
+                <div class="card border-0 shadow-lg scanner-container" style="width: 100%; max-width: 460px; border-radius: 24px; background: white;">
+                    <div class="scanner-line" id="scanner-line"></div>
+                    
+                    <div class="card-header bg-white border-bottom border-mint py-3 px-4 d-flex align-items-center justify-content-between" style="border-radius: 24px 24px 0 0;">
+                        <div class="fw-bold text-deep-teal d-flex align-items-center">
+                            <i class="bi bi-cpu text-teal me-2 fs-5"></i>
+                            <span id="sim-status">AI Parser Active</span>
+                        </div>
+                        <span class="badge bg-success text-white rounded-pill px-3 py-1 text-xs" id="sim-score">98.2% Match</span>
+                    </div>
+                    
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center gap-3 mb-4">
+                            <div class="rounded-circle d-flex justify-content-center align-items-center fw-bold text-teal" style="width: 55px; height: 55px; background: var(--mint-light); font-size: 1.3rem;">
+                                JD
+                            </div>
+                            <div>
+                                <h5 class="fw-bold text-dark mb-0" id="sim-name">Jane Doe</h5>
+                                <p class="text-muted small mb-0" id="sim-title">Senior Python Engineer</p>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between small mb-1">
+                                <span class="fw-600 text-muted">Python & Django Core</span>
+                                <span class="fw-bold text-teal" id="progress-val-1">95%</span>
+                            </div>
+                            <div class="progress" style="height: 8px; background: #eefdfb;">
+                                <div class="progress-bar" id="progress-bar-1" style="background-color: var(--teal); width: 95%; transition: width 1s ease-out;"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <div class="d-flex justify-content-between small mb-1">
+                                <span class="fw-600 text-muted">System Design & APIs</span>
+                                <span class="fw-bold text-teal" id="progress-val-2">90%</span>
+                            </div>
+                            <div class="progress" style="height: 8px; background: #eefdfb;">
+                                <div class="progress-bar" id="progress-bar-2" style="background-color: var(--teal); width: 90%; transition: width 1s ease-out;"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="p-3 rounded-4" style="background: var(--bg-section); border: 1px solid var(--mint-light);">
+                            <p class="small text-deep-teal mb-0 fw-500" id="sim-feedback">
+                                <i class="bi bi-chat-quote-fill text-teal me-2 fs-6"></i>Candidate demonstrates strong alignment with backend and API requirements. Highly suitable.
+                            </p>
+                        </div>
+                        
+                        <!-- Control Button for Simulation -->
+                        <div class="text-center mt-3">
+                            <button class="btn btn-sm btn-outline-teal rounded-pill px-4 fw-600" onclick="restartSimulation()">
+                                <i class="bi bi-arrow-repeat me-1"></i> Restart Analyzer Demo
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Live Demo Sandbox Section -->
+    <div class="py-5 my-5 border-top border-mint" id="demo-sandbox">
+        <div class="row align-items-center">
+            <div class="col-lg-5 mb-5 mb-lg-0 pe-lg-4">
+                <div class="badge rounded-pill mb-3 px-3 py-2 fw-600" style="background: var(--mint-light); color: var(--deep-teal);">
+                    <i class="bi bi-sliders me-2"></i> Real-time Sandbox
+                </div>
+                <h2 class="fw-bold text-deep-teal mb-3">Try the Match Estimator</h2>
+                <p class="text-muted mb-4" style="line-height: 1.7;">
+                    Select the skills below to build a developer profile. See how our algorithm dynamically evaluates suitability and updates recommendations.
+                </p>
+                <div class="d-flex flex-wrap gap-2 mb-4" id="sandbox-skills-container">
+                    <span class="sandbox-tag active" data-score="15" data-feedback="Strong python skills added." onclick="toggleSandboxSkill(this)">Python</span>
+                    <span class="sandbox-tag active" data-score="20" data-feedback="Django framework provides web expertise." onclick="toggleSandboxSkill(this)">Django</span>
+                    <span class="sandbox-tag" data-score="15" data-feedback="Docker containers enable local environment parity." onclick="toggleSandboxSkill(this)">Docker</span>
+                    <span class="sandbox-tag" data-score="15" data-feedback="PostgreSQL provides relational database capacity." onclick="toggleSandboxSkill(this)">PostgreSQL</span>
+                    <span class="sandbox-tag" data-score="20" data-feedback="AWS experience satisfies cloud infrastructure requirements." onclick="toggleSandboxSkill(this)">AWS</span>
+                    <span class="sandbox-tag" data-score="15" data-feedback="Kubernetes adds advanced microservices orchestration." onclick="toggleSandboxSkill(this)">Kubernetes</span>
+                </div>
+            </div>
+            <div class="col-lg-7">
+                <div class="card border-0 shadow-lg p-4 rounded-4 bg-white border-top border-5 border-teal">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h5 class="fw-bold text-dark mb-0">Simulated Job Matching</h5>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="small fw-600 text-muted">Estimated Suitability:</span>
+                            <span class="h4 fw-800 text-teal mb-0" id="sandbox-score">35%</span>
+                        </div>
+                    </div>
+                    
+                    <div class="progress mb-4" style="height: 10px; background: #f0f7f6;">
+                        <div class="progress-bar" id="sandbox-progress-bar" style="background-color: var(--teal); width: 35%; transition: width 0.4s ease-out;"></div>
+                    </div>
+                    
+                    <div class="p-3 rounded-3" style="background: #fafcfb; border: 1px solid rgba(91, 174, 160, 0.15);">
+                        <h6 class="fw-bold text-deep-teal mb-2"><i class="bi bi-lightbulb-fill text-warning me-1"></i> AI Feedback Insights</h6>
+                        <p class="text-muted small mb-0" id="sandbox-feedback">
+                            Select skills on the left to evaluate candidate fit for a Cloud Backend Engineer role.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Features Section -->
+    <div class="py-5 animate-fade-in">
+        <div class="text-center mb-5">
+            <h2 class="fw-bold text-deep-teal mb-2">Platform Features</h2>
+            <p class="text-muted max-w-md mx-auto">Injecting intelligent automation and data clarity into every step of the talent acquisition cycle.</p>
+        </div>
+        
+        <div class="row g-4">
+            <!-- Feature 1 -->
+            <div class="col-md-4">
+                <div class="card feature-card border-0 h-100 p-4">
+                    <div class="feature-icon-wrapper">
+                        <i class="bi bi-file-earmark-code"></i>
+                    </div>
+                    <h4 class="fw-bold text-dark mb-3">AI Resume Parsing</h4>
+                    <p class="text-muted small mb-0">Our parsing layers extract structure, keywords, contact details, and certifications from any document format, creating clean candidate profiles automatically.</p>
+                </div>
+            </div>
+            
+            <!-- Feature 2 -->
+            <div class="col-md-4">
+                <div class="card feature-card border-0 h-100 p-4">
+                    <div class="feature-icon-wrapper">
+                        <i class="bi bi-graph-up"></i>
+                    </div>
+                    <h4 class="fw-bold text-dark mb-3">Smart Candidate Ranking</h4>
+                    <p class="text-muted small mb-0">Sift candidate databases instantly. SmartRecruit grades profiles directly against job criteria to return objective matches immediately.</p>
+                </div>
+            </div>
+            
+            <!-- Feature 3 -->
+            <div class="col-md-4">
+                <div class="card feature-card border-0 h-100 p-4">
+                    <div class="feature-icon-wrapper">
+                        <i class="bi bi-check2-square"></i>
+                    </div>
+                    <h4 class="fw-bold text-dark mb-3">Interactive Assessments</h4>
+                    <p class="text-muted small mb-0">Conduct evaluation rounds with coding test environments. Results are auto-graded and verified against core requirements.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Jobs Section -->
+    <div class="py-5 my-5 border-top border-mint">
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+            <div>
+                <h2 class="fw-bold text-deep-teal m-0">Recent Opportunities</h2>
+                <p class="text-muted small mb-0">Discover live openings with interactive evaluations.</p>
+            </div>
+            <a href="{% url 'job_list' %}" class="btn btn-sm btn-outline-teal px-4 py-2 rounded-pill fw-600">
+                Browse All Openings <i class="bi bi-arrow-right ms-1"></i>
+            </a>
+        </div>
+        
+        <div class="row g-4">
+            {% if latest_jobs %}
+                {% for job in latest_jobs %}
+                    <div class="col-md-4">
+                        <div class="card job-card h-100 p-4">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <span class="badge badge-cream text-teal fw-600 px-3 py-1 rounded-pill">{{ job.category.name|default:"Tech" }}</span>
+                                <span class="text-muted small"><i class="bi bi-clock me-1"></i>{{ job.created_at|timesince }} ago</span>
+                            </div>
+                            <h5 class="fw-bold text-dark mb-2">{{ job.title }}</h5>
+                            <p class="text-teal small mb-3"><i class="bi bi-building me-1"></i>{{ job.company.name }}</p>
+                            <p class="text-muted small mb-4" style="line-height: 1.6; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; height: 4.8em;">
+                                {{ job.description|striptags }}
+                            </p>
+                            <div class="d-flex justify-content-between align-items-center mt-auto border-top pt-3 border-mint-light">
+                                <span class="fw-bold text-dark small">{{ job.location|default:"Remote" }}</span>
+                                <a href="{% url 'job_detail' job.pk %}" class="btn btn-sm btn-outline-teal fw-600 px-3 rounded-pill">
+                                    Apply Now
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <!-- Predefined Fallback Mock Cards -->
+                <div class="col-md-4">
+                    <div class="card job-card h-100 p-4">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <span class="badge badge-cream text-teal fw-600 px-3 py-1 rounded-pill">Development</span>
+                            <span class="text-muted small"><i class="bi bi-clock me-1"></i>2 days ago</span>
+                        </div>
+                        <h5 class="fw-bold text-dark mb-2">Senior Fullstack Developer</h5>
+                        <p class="text-teal small mb-3"><i class="bi bi-building me-1"></i>Tech Solutions Inc.</p>
+                        <p class="text-muted small mb-4">Looking for a Senior Python/React Developer to scale our backend architectures and craft clean client dashboards.</p>
+                        <div class="d-flex justify-content-between align-items-center mt-auto border-top pt-3 border-mint-light">
+                            <span class="fw-bold text-dark small">San Francisco, CA</span>
+                            <a href="{% url 'job_list' %}" class="btn btn-sm btn-outline-teal fw-600 px-3 rounded-pill">View Details</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card job-card h-100 p-4">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <span class="badge badge-cream text-teal fw-600 px-3 py-1 rounded-pill">DevOps</span>
+                            <span class="text-muted small"><i class="bi bi-clock me-1"></i>4 days ago</span>
+                        </div>
+                        <h5 class="fw-bold text-dark mb-2">Site Reliability Engineer</h5>
+                        <p class="text-teal small mb-3"><i class="bi bi-building me-1"></i>CloudSphere Systems</p>
+                        <p class="text-muted small mb-4">Manage Kubernetes namespaces, write Terraform configurations, and configure Prometheus/Grafana infrastructure stacks.</p>
+                        <div class="d-flex justify-content-between align-items-center mt-auto border-top pt-3 border-mint-light">
+                            <span class="fw-bold text-dark small">Remote</span>
+                            <a href="{% url 'job_list' %}" class="btn btn-sm btn-outline-teal fw-600 px-3 rounded-pill">View Details</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card job-card h-100 p-4">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <span class="badge badge-cream text-teal fw-600 px-3 py-1 rounded-pill">AI/ML</span>
+                            <span class="text-muted small"><i class="bi bi-clock me-1"></i>1 week ago</span>
+                        </div>
+                        <h5 class="fw-bold text-dark mb-2">NLP Engineer</h5>
+                        <p class="text-teal small mb-3"><i class="bi bi-building me-1"></i>Synthetica AI</p>
+                        <p class="text-muted small mb-4">Build and optimize large language models, refine parsing workflows, and deploy embedding pipelines.</p>
+                        <div class="d-flex justify-content-between align-items-center mt-auto border-top pt-3 border-mint-light">
+                            <span class="fw-bold text-dark small">New York, NY</span>
+                            <a href="{% url 'job_list' %}" class="btn btn-sm btn-outline-teal fw-600 px-3 rounded-pill">View Details</a>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- CTA Section -->
+    <div class="my-5 p-5 text-center rounded-5 shadow-lg position-relative overflow-hidden" style="background: linear-gradient(135deg, var(--teal), var(--deep-teal)); border: none;">
+        <!-- Background pattern -->
+        <div class="position-absolute" style="opacity: 0.05; top: -50%; left: -10%; width: 120%; height: 200%; background-image: radial-gradient(#fff 2px, transparent 2px); background-size: 30px 30px; pointer-events: none;"></div>
+        
+        <div class="position-relative z-1 py-4">
+            <h2 class="display-5 fw-bold text-white mb-3">Ready to transform your hiring?</h2>
+            <p class="lead text-white-50 mb-5 max-w-md mx-auto">Create a free account today. Whether you're hunting for a job or hiring talent, SmartRecruit is your unfair advantage.</p>
+            
+            <div class="d-flex justify-content-center gap-3 flex-wrap">
+                {% if not user.is_authenticated %}
+                    <a href="{% url 'register' %}?role=CANDIDATE" class="btn btn-lg fw-bold px-5 py-3 rounded-pill shadow hover-lift" style="background: var(--cream); color: var(--deep-teal);">
+                        I am a Candidate
+                    </a>
+                    <a href="{% url 'register' %}?role=RECRUITER" class="btn btn-lg btn-outline-light fw-bold px-5 py-3 rounded-pill hover-lift">
+                        I am Hiring
+                    </a>
+                {% else %}
+                    <a href="{% url 'job_list' %}" class="btn btn-lg fw-bold px-5 py-3 rounded-pill shadow hover-lift" style="background: var(--cream); color: var(--deep-teal);">
+                        Explore Jobs
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Resume Parser Interactive Demo Logic
+    const steps = [
+        { name: "John Doe", title: "Backend Engineer", val1: 45, val2: 30, text: "📁 docx_extractor: Loading resume text...", score: "42%" },
+        { name: "John Doe", title: "Backend Engineer", val1: 70, val2: 50, text: "🧠 spacy_ner: Parsing entity and skill tags...", score: "68%" },
+        { name: "John Doe", title: "Backend Engineer", val1: 95, val2: 90, text: "⚡ tech_match: Comparing candidate skills with requirements...", score: "96.8%" },
+        { name: "John Doe", title: "Backend Engineer", val1: 95, val2: 90, text: "🎉 Parsing Complete! Match score finalized.", score: "96.8%" }
+    ];
+    let stepIndex = 0;
+    let simInterval = null;
+
+    function runSimulationStep() {
+        if (stepIndex >= steps.length) {
+            clearInterval(simInterval);
+            document.getElementById('scanner-line').style.display = 'none';
+            return;
+        }
+        
+        const data = steps[stepIndex];
+        document.getElementById('sim-status').innerText = data.text.split(':')[0] || "AI Parser Active";
+        document.getElementById('sim-name').innerText = data.name;
+        document.getElementById('sim-title').innerText = data.title;
+        document.getElementById('sim-feedback').innerHTML = `<i class="bi bi-chat-quote-fill text-teal me-2 fs-6"></i>` + data.text;
+        
+        document.getElementById('progress-bar-1').style.width = data.val1 + '%';
+        document.getElementById('progress-val-1').innerText = data.val1 + '%';
+        
+        document.getElementById('progress-bar-2').style.width = data.val2 + '%';
+        document.getElementById('progress-val-2').innerText = data.val2 + '%';
+        
+        document.getElementById('sim-score').innerText = data.score;
+        
+        stepIndex++;
+    }
+
+    function restartSimulation() {
+        clearInterval(simInterval);
+        stepIndex = 0;
+        document.getElementById('scanner-line').style.display = 'block';
+        runSimulationStep();
+        simInterval = setInterval(runSimulationStep, 2500);
+    }
+
+    // Interactive Sandbox Logic
+    function toggleSandboxSkill(tagElement) {
+        tagElement.classList.toggle('active');
+        recalculateSandbox();
+    }
+
+    function recalculateSandbox() {
+        const activeTags = document.querySelectorAll('#sandbox-skills-container .sandbox-tag.active');
+        let score = 0;
+        let feedbackPoints = [];
+        
+        activeTags.forEach(tag => {
+            score += parseInt(tag.getAttribute('data-score'));
+            feedbackPoints.push(tag.getAttribute('data-feedback'));
+        });
+        
+        // Cap score at 100
+        score = Math.min(score, 100);
+        
+        // Update elements
+        document.getElementById('sandbox-score').innerText = score + '%';
+        document.getElementById('sandbox-progress-bar').style.width = score + '%';
+        
+        const feedbackContainer = document.getElementById('sandbox-feedback');
+        if (activeTags.length === 0) {
+            feedbackContainer.innerText = "Select skills on the left to evaluate candidate fit for a Cloud Backend Engineer role.";
+        } else {
+            feedbackContainer.innerHTML = feedbackPoints.map(pt => `<div class="mb-2"><i class="bi bi-check-circle-fill text-teal me-2"></i>${pt}</div>`).join('');
+        }
+    }
+
+    // Initialize Page Demos
+    document.addEventListener("DOMContentLoaded", () => {
+        restartSimulation();
+        recalculateSandbox();
+    });
+</script>
+{% endblock %}

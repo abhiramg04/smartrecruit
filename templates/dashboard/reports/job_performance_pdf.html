@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Job Performance Report</title>
+    <style>
+        @page {
+            size: A4 landscape;
+            margin: 2cm;
+        }
+        body { font-family: Helvetica, sans-serif; font-size: 10px; color: #333; }
+        .header { border-bottom: 2px solid #8e44ad; padding-bottom: 10px; margin-bottom: 20px; }
+        .header h1 { margin: 0; color: #8e44ad; font-size: 20px; }
+        .header p { margin: 5px 0 0 0; color: #7f8c8d; font-size: 10px; }
+        .meta-box { background-color: #f8f9fa; border: 1px solid #e9ecef; padding: 10px; margin-bottom: 20px; }
+        .meta-table { width: 100%; border: none; }
+        .meta-table td { border: none; padding: 3px; }
+        .meta-label { font-weight: bold; color: #495057; width: 15%; }
+        .meta-value { color: #212529; }
+        table.data-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        table.data-table th, table.data-table td { border: 1px solid #dee2e6; padding: 6px 8px; text-align: left; }
+        table.data-table th { background-color: #f5eef8; color: #8e44ad; font-weight: bold; }
+        table.data-table tr:nth-child(even) { background-color: #fdfdfd; }
+        .badge { display: inline-block; padding: 2px 5px; font-size: 8px; font-weight: bold; border-radius: 3px; text-align: center; }
+        .badge-active { background-color: #d4edda; color: #155724; }
+        .badge-closed { background-color: #e2e3e5; color: #383d41; }
+        .badge-draft { background-color: #fff3cd; color: #856404; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>SmartRecruit &mdash; Job Performance Report</h1>
+        <p>Generated on {{ generated_at|date:"F j, Y, g:i a" }} by {{ generated_by.email }}</p>
+    </div>
+
+    <div class="meta-box">
+        <table class="meta-table">
+            <tr>
+                <td class="meta-label">Company Filter:</td>
+                <td class="meta-value">{% if filters.company != 'All' %}{{ filters.company.name }}{% else %}All Companies{% endif %}</td>
+                <td class="meta-label">Status Filter:</td>
+                <td class="meta-value">{{ filters.status }}</td>
+            </tr>
+        </table>
+    </div>
+
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th style="width: 25%;">Job Title</th>
+                <th style="width: 20%;">Company</th>
+                <th style="width: 15%;">Category</th>
+                <th style="width: 10%;">Status</th>
+                <th style="width: 10%; text-align: center;">Total Apps</th>
+                <th style="width: 10%; text-align: center;">Shortlisted</th>
+                <th style="width: 10%; text-align: center;">Avg AI Score</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for job in jobs %}
+            <tr>
+                <td><strong>{{ job.title }}</strong><br/><span style="color:#7f8c8d; font-size:8px;">Created: {{ job.created_at|date:"Y-m-d" }}</span></td>
+                <td>{{ job.company.name }}</td>
+                <td>{{ job.category.name|default:"N/A" }}</td>
+                <td>
+                    {% if job.is_closed %}
+                        <span class="badge badge-closed">CLOSED</span>
+                    {% elif job.is_published %}
+                        <span class="badge badge-active">ACTIVE</span>
+                    {% else %}
+                        <span class="badge badge-draft">DRAFT/PENDING</span>
+                    {% endif %}
+                </td>
+                <td style="text-align: center;">{{ job.total_apps }}</td>
+                <td style="text-align: center;">{{ job.shortlisted_apps }}</td>
+                <td style="text-align: center;">
+                    {% if job.avg_ai_score is not None %}
+                        {{ job.avg_ai_score|floatformat:1 }}%
+                    {% else %}
+                        N/A
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="7" style="text-align: center; color: #7f8c8d;">No jobs found matching the selected filters.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

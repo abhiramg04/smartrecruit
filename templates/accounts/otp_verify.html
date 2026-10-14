@@ -1,0 +1,224 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify Email – SmartRecruit</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="{% static 'css/style.css' %}" rel="stylesheet">
+    <style>
+        body {
+            min-height:100vh; display:flex; align-items:center; justify-content:center;
+            background: linear-gradient(135deg, var(--cream) 0%, var(--mint-light) 50%, rgba(91,174,160,0.20) 100%);
+        }
+
+        .otp-card {
+            background: rgba(255,255,255,0.92);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            padding: 2.5rem;
+            box-shadow: 0 20px 60px rgba(45,139,123,0.18);
+            width: 100%; max-width: 420px;
+            text-align: center;
+        }
+
+        .otp-icon-wrap {
+            width: 80px; height: 80px; border-radius: 50%;
+            background: linear-gradient(135deg, var(--deep-teal), var(--teal));
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 1.5rem;
+            box-shadow: 0 8px 24px rgba(45,139,123,0.28);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 8px 24px rgba(45,139,123,0.28); }
+            50%       { box-shadow: 0 8px 36px rgba(45,139,123,0.48); }
+        }
+
+        /* OTP digit boxes */
+        .otp-inputs { display: flex; gap: 0.65rem; justify-content: center; margin: 1.5rem 0; }
+        .otp-digit {
+            width: 52px; height: 60px;
+            text-align: center; font-size: 1.5rem; font-weight: 700;
+            border: 2px solid var(--border);
+            border-radius: var(--radius-sm);
+            background: rgba(255,255,255,0.80);
+            color: var(--text-primary);
+            transition: var(--transition);
+            outline: none;
+        }
+        .otp-digit:focus {
+            border-color: var(--deep-teal);
+            box-shadow: 0 0 0 3px rgba(45,139,123,0.18);
+            background: #fff;
+        }
+        .otp-digit.filled { border-color: var(--teal); background: rgba(143,223,212,0.12); }
+
+        .btn-verify {
+            background: linear-gradient(135deg, var(--deep-teal) 0%, var(--teal) 100%);
+            border: none; color: #fff; font-weight: 700; font-size: 1rem;
+            border-radius: var(--radius-md); padding: 0.75rem;
+            box-shadow: 0 6px 20px rgba(45,139,123,0.30); transition: var(--transition);
+            width: 100%;
+        }
+        .btn-verify:hover {
+            background: linear-gradient(135deg, var(--deep-teal-dk) 0%, var(--deep-teal) 100%);
+            transform: translateY(-2px); color: #fff;
+        }
+
+        .countdown { font-size: 0.85rem; color: var(--text-muted); margin-top: 1rem; }
+        .countdown .time { font-weight: 700; color: var(--deep-teal); }
+
+        .errorlist { list-style:none; padding:0; margin:0.25rem 0 0; }
+        .errorlist li { font-size:0.78rem; color:#c0392b; font-weight:500; }
+    </style>
+</head>
+<body>
+<div class="otp-card animate-fade-in">
+
+    <!-- Icon -->
+    <div class="otp-icon-wrap">
+        <i class="bi bi-envelope-check" style="font-size:2rem;color:#fff;"></i>
+    </div>
+
+    <!-- Brand -->
+    <div style="font-size:1.1rem;font-weight:800;color:var(--deep-teal);margin-bottom:0.25rem;display:flex;align-items:center;gap:0.4rem;justify-content:center;">
+        <i class="bi bi-briefcase-fill"></i> SmartRecruit
+    </div>
+
+    <h2 style="font-size:1.4rem;font-weight:800;color:var(--text-primary);margin:0.75rem 0 0.3rem;">
+        Verify Your Email
+    </h2>
+    <p style="font-size:0.88rem;color:var(--text-muted);margin-bottom:0;">
+        We sent a 6-digit OTP to your email address.<br>
+        It expires in <strong class="text-teal">10 minutes</strong>.
+    </p>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show py-2 mt-3" role="alert" style="font-size:0.82rem;text-align:left;">
+                {{ message }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Hidden real OTP field + visual digit inputs -->
+    <form method="post" id="otpForm">
+        {% csrf_token %}
+        <!-- Hidden real input that gets the final value -->
+        <input type="hidden" name="otp" id="realOtp">
+
+        <!-- Visual boxes -->
+        <div class="otp-inputs" id="otpBoxes">
+            <input type="text" maxlength="1" class="otp-digit" data-idx="0" inputmode="numeric" pattern="[0-9]">
+            <input type="text" maxlength="1" class="otp-digit" data-idx="1" inputmode="numeric" pattern="[0-9]">
+            <input type="text" maxlength="1" class="otp-digit" data-idx="2" inputmode="numeric" pattern="[0-9]">
+            <input type="text" maxlength="1" class="otp-digit" data-idx="3" inputmode="numeric" pattern="[0-9]">
+            <input type="text" maxlength="1" class="otp-digit" data-idx="4" inputmode="numeric" pattern="[0-9]">
+            <input type="text" maxlength="1" class="otp-digit" data-idx="5" inputmode="numeric" pattern="[0-9]">
+        </div>
+
+        {% if form.otp.errors %}
+            <ul class="errorlist text-center">{% for e in form.otp.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+        {% endif %}
+
+        <button type="submit" class="btn-verify mt-2" id="verifyBtn">
+            <i class="bi bi-shield-check me-2"></i>Verify & Activate Account
+        </button>
+    </form>
+
+    <!-- Countdown -->
+    <div class="countdown mt-3">
+        Didn't get the email?
+        <span id="resendCountdown" class="time">Resend in 60s</span>
+    </div>
+
+    <div class="mt-3">
+        <a href="{% url 'register' %}" style="font-size:0.82rem;color:var(--text-muted);">
+            <i class="bi bi-arrow-left me-1"></i>Back to Registration
+        </a>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    /* ── OTP digit navigation ── */
+    const digits = document.querySelectorAll('.otp-digit');
+    const realOtp = document.getElementById('realOtp');
+
+    digits.forEach((input, i) => {
+        input.addEventListener('input', () => {
+            input.value = input.value.replace(/[^0-9]/g, '');
+            if (input.value) {
+                input.classList.add('filled');
+                if (i < digits.length - 1) digits[i + 1].focus();
+            } else {
+                input.classList.remove('filled');
+            }
+            updateReal();
+            autoSubmitIfFull();
+        });
+
+        input.addEventListener('keydown', e => {
+            if (e.key === 'Backspace' && !input.value && i > 0) {
+                digits[i - 1].focus();
+                digits[i - 1].value = '';
+                digits[i - 1].classList.remove('filled');
+                updateReal();
+            }
+        });
+
+        // Handle paste
+        input.addEventListener('paste', e => {
+            e.preventDefault();
+            const pasted = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g,'');
+            pasted.split('').slice(0,6).forEach((ch, j) => {
+                if (digits[j]) {
+                    digits[j].value = ch;
+                    digits[j].classList.add('filled');
+                }
+            });
+            const nextEmpty = [...digits].findIndex(d => !d.value);
+            if (nextEmpty >= 0) digits[nextEmpty].focus(); else digits[5].focus();
+            updateReal();
+            autoSubmitIfFull();
+        });
+    });
+
+    function updateReal() {
+        realOtp.value = [...digits].map(d => d.value).join('');
+    }
+
+    function autoSubmitIfFull() {
+        if (realOtp.value.length === 6) {
+            setTimeout(() => {
+                document.getElementById('verifyBtn').innerHTML =
+                    '<span class="spinner-border spinner-border-sm me-2"></span>Verifying…';
+                document.getElementById('otpForm').submit();
+            }, 300);
+        }
+    }
+
+    /* ── Countdown timer ── */
+    let secs = 60;
+    const countEl = document.getElementById('resendCountdown');
+    const timer = setInterval(() => {
+        secs--;
+        if (secs <= 0) {
+            clearInterval(timer);
+            countEl.innerHTML = '<a href="{% url "register" %}" style="color:var(--deep-teal);font-weight:700;">Resend OTP</a>';
+        } else {
+            countEl.textContent = `Resend in ${secs}s`;
+        }
+    }, 1000);
+
+    // Focus first box on load
+    digits[0].focus();
+</script>
+</body>
+</html>

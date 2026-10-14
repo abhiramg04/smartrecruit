@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete Category – SmartRecruit Admin{% endblock %}
+
+{% block content %}
+<div class="animate-fade-in">
+
+    <!-- Page Header -->
+    <div class="page-header mb-4">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+            <div>
+                <h1 class="mb-1" style="font-size:1.5rem; color: #ff6b6b;">
+                    <i class="bi bi-exclamation-triangle"></i> Delete Category
+                </h1>
+                <p class="mb-0" style="color:var(--text-secondary);font-size:0.88rem;">
+                    Confirm the deletion of this job category.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirmation Form -->
+    <div class="row">
+        <div class="col-lg-8 col-xl-6">
+            <div class="custom-card p-4 text-center">
+                <div class="mb-4">
+                    <i class="bi bi-trash" style="font-size:3rem; color: #ff6b6b; opacity: 0.8;"></i>
+                </div>
+                
+                <h4 style="color: var(--text-primary);">Are you sure you want to delete "{{ object.name }}"?</h4>
+                <p style="color: var(--text-secondary); font-size: 0.95rem;" class="mb-4">
+                    This action cannot be undone. Any jobs associated with this category will have their category removed (set to none).
+                </p>
+
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="d-flex justify-content-center gap-3">
+                        <a href="{% url 'admin_categories' %}" class="btn btn-outline-secondary px-4">
+                            Cancel
+                        </a>
+                        <button type="submit" class="btn btn-danger px-4 d-flex align-items-center gap-2">
+                            <i class="bi bi-trash"></i> Yes, Delete Category
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

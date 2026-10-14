@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ assessment.test.title }} – SmartRecruit{% endblock %}
+
+{% block content %}
+<div class="animate-fade-in max-w-3xl mx-auto">
+    <div class="page-header mb-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
+        <div>
+            <h1 class="fw-bold m-0" style="color: var(--cream);">{{ assessment.test.title }}</h1>
+            <p class="mb-0 text-white-50">Target Job: {{ assessment.test.job.title }}</p>
+        </div>
+        <span class="badge bg-danger fs-6 px-3 py-2"><i class="bi bi-stopwatch me-1"></i> {{ assessment.test.duration_minutes }} Minutes</span>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+        
+        {% for q in assessment.test.questions %}
+        <div class="card border-0 shadow-sm rounded-lg p-4 mb-4" style="background: rgba(255,255,255,0.03); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1);">
+            <h5 class="fw-bold text-white mb-3">Question {{ forloop.counter }}: {{ q.question }}</h5>
+            <div class="d-flex flex-column gap-2">
+                {% for opt in q.options %}
+                <label class="form-check p-3 rounded border border-secondary border-opacity-20 d-flex align-items-center gap-2 cursor-pointer hover-lift text-white" style="background: rgba(255,255,255,0.02);">
+                    <input type="radio" name="q_{{ forloop.parentloop.counter0 }}" value="{{ forloop.counter0 }}" class="form-check-input mt-0" required>
+                    <span>{{ opt }}</span>
+                </label>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+
+        <div class="d-flex justify-content-end gap-2 mb-5">
+            <button type="submit" class="btn btn-primary-custom px-5 py-3 fw-bold shadow-teal fs-6">
+                Submit Assessment Test <i class="bi bi-send ms-2"></i>
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

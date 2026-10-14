@@ -1,0 +1,189 @@
+{% extends 'base.html' %}
+
+{% block title %}Application Timeline - SmartRecruit{% endblock %}
+
+{% block content %}
+<div class="page-header animate-fade-in d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+    <div>
+        <h2 class="fw-bold m-0" style="color: var(--cream);">Recruitment Workflow</h2>
+        <p class="mb-0" style="color: rgba(254,255,214,0.85);">Track application progress and status updates</p>
+    </div>
+    <div>
+        {% if user.role in 'ADMIN,RECRUITER,COMPANY' %}
+        <a href="{% url 'ranking_dashboard' application.job.pk %}" class="btn btn-outline-primary fw-600">
+            <i class="bi bi-arrow-left me-1"></i> Back to Ranking
+        </a>
+        {% else %}
+        <a href="{% url 'my_applications' %}" class="btn btn-outline-primary fw-600">
+            <i class="bi bi-arrow-left me-1"></i> Back to Applications
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row g-4 animate-children">
+    <!-- Left Column: Details & Update Form -->
+    <div class="col-lg-4 col-md-5">
+        
+        <!-- Applicant Details Card -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white border-bottom border-mint py-3">
+                <h5 class="fw-bold m-0 text-teal"><i class="bi bi-person-badge me-2"></i>Applicant Details</h5>
+            </div>
+            <div class="card-body p-4">
+                <h5 class="fw-bold text-dark mb-1">{{ application.candidate.user.get_full_name|default:application.candidate.user.username }}</h5>
+                <p class="text-muted mb-3"><i class="bi bi-briefcase me-1"></i> {{ application.job.title }}</p>
+                
+                <hr class="border-mint opacity-50">
+                
+                <div class="mb-3">
+                    <span class="text-muted small d-block mb-1 fw-600">Current Status</span>
+                    <span class="badge rounded-pill px-3 py-2 fw-600 border 
+                        {% if application.status == 'OFFER' %} bg-success text-white border-success
+                        {% elif application.status == 'REJECTED' %} bg-danger text-white border-danger
+                        {% elif application.status in 'SCREENING,ASSESSMENT' %} badge-cream border-cream
+                        {% elif application.status in 'SHORTLISTED,INTERVIEW,HR_ROUND' %} badge-teal border-teal
+                        {% else %} bg-secondary text-white border-secondary {% endif %}">
+                        {{ application.get_status_display }}
+                    </span>
+                </div>
+                
+                <div>
+                    <span class="text-muted small d-block mb-1 fw-600">Applied On</span>
+                    <span class="text-dark fw-600"><i class="bi bi-calendar-event me-1 text-teal"></i> {{ application.applied_at|date:"M d, Y - H:i" }}</span>
+                </div>
+            </div>
+        </div>
+
+        {% if user.role in 'ADMIN,RECRUITER,COMPANY' %}
+        <!-- Update Status Form -->
+        <div class="card border-0 shadow-sm mb-4" style="background: var(--mint-light); border: 1px solid var(--mint) !important;">
+            <div class="card-header border-bottom border-mint py-3" style="background: transparent;">
+                <h5 class="fw-bold m-0 text-deep-teal"><i class="bi bi-pencil-square me-2"></i>Update Stage</h5>
+            </div>
+            <div class="card-body p-4">
+                <form action="{% url 'workflow_update' application.pk %}" method="POST">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="status" class="form-label text-deep-teal fw-600 small">New Status</label>
+                        <select class="form-select border-mint" id="status" name="status">
+                            {% for val, display in application.STATUS_CHOICES %}
+                                <option value="{{ val }}" {% if application.status == val %}selected{% endif %}>{{ display }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="notes" class="form-label text-deep-teal fw-600 small">Notes / Feedback</label>
+                        <textarea class="form-control border-mint" id="notes" name="notes" rows="3" placeholder="e.g. Cleared technical interview..."></textarea>
+                        <div class="form-text text-muted small mt-2"><i class="bi bi-info-circle me-1"></i> Changing the status automatically notifies the candidate via email.</div>
+                    </div>
+                    <button type="submit" class="btn btn-primary-custom w-100 fw-bold shadow-teal">
+                        <i class="bi bi-send-check me-1"></i> Update & Notify
+                    </button>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Interview Scheduling -->
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-bottom border-mint py-3 d-flex justify-content-between align-items-center">
+                <h5 class="fw-bold m-0 text-teal"><i class="bi bi-calendar-event me-2"></i>Interviews</h5>
+                <a href="{% url 'schedule_interview' application.pk %}" class="btn btn-sm btn-outline-teal fw-600">
+                    <i class="bi bi-plus-lg me-1"></i> Schedule
+                </a>
+            </div>
+            <div class="card-body p-0">
+                {% if application.interview_schedules.exists %}
+                    <ul class="list-group list-group-flush">
+                        {% for schedule in application.interview_schedules.all %}
+                            <li class="list-group-item p-3 border-bottom">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <h6 class="fw-bold mb-1 text-dark">{{ schedule.scheduled_time|date:"M d, Y - h:i A" }}</h6>
+                                        <p class="mb-1 small text-muted"><i class="bi bi-clock me-1 text-teal"></i> {{ schedule.duration_minutes }} Mins</p>
+                                        {% if schedule.meeting_link %}
+                                            <a href="{{ schedule.meeting_link }}" target="_blank" class="small text-decoration-none text-teal fw-600">
+                                                <i class="bi bi-link-45deg me-1"></i> Join Meeting
+                                            </a>
+                                        {% endif %}
+                                    </div>
+                                    <span class="badge 
+                                        {% if schedule.status == 'SCHEDULED' %}bg-info text-white
+                                        {% elif schedule.status == 'COMPLETED' %}bg-success text-white
+                                        {% else %}bg-secondary text-white{% endif %} 
+                                        rounded-pill py-1 px-2" style="font-size: 0.75rem;">
+                                        {{ schedule.get_status_display }}
+                                    </span>
+                                </div>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <div class="p-4 text-center">
+                        <p class="text-muted small mb-0">No interviews scheduled yet.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+        
+    </div>
+
+    <!-- Right Column: Timeline -->
+    <div class="col-lg-8 col-md-7">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white border-bottom border-mint py-3">
+                <h5 class="fw-bold m-0 text-teal"><i class="bi bi-clock-history me-2"></i>Workflow Timeline & Logs</h5>
+            </div>
+            <div class="card-body p-0" style="overflow-y: auto; max-height: 75vh;">
+                {% if application.workflow_logs.exists %}
+                    <div class="timeline p-4">
+                        {% for log in application.workflow_logs.all %}
+                        <div class="timeline-item position-relative mb-4 pb-2" style="border-left: 2px solid var(--mint); padding-left: 1.5rem; margin-left: 10px;">
+                            <!-- Timeline Dot -->
+                            <div class="position-absolute rounded-circle shadow-sm" 
+                                 style="width: 14px; height: 14px; background: var(--teal); left: -8px; top: 5px; border: 3px solid white;"></div>
+                            
+                            <!-- Timestamp -->
+                            <div class="small fw-600 mb-1" style="color: var(--teal);">
+                                {{ log.created_at|date:"M d, Y - H:i" }}
+                                <span class="text-muted ms-1 fw-normal">({{ log.created_at|timesince }} ago)</span>
+                            </div>
+                            
+                            <!-- Status Change -->
+                            <div class="fw-bold text-dark mb-2" style="font-size: 1.05rem;">
+                                {% if log.previous_status %}
+                                    <span class="text-muted text-decoration-line-through">{{ log.get_previous_status_display }}</span> 
+                                    <i class="bi bi-arrow-right mx-2 text-teal"></i> 
+                                    <span class="text-deep-teal">{{ log.get_new_status_display }}</span>
+                                {% else %}
+                                    <span class="text-deep-teal">{{ log.get_new_status_display }}</span>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Notes -->
+                            {% if log.notes %}
+                                <div class="p-3 rounded-lg" style="background: var(--bg-section); border: 1px solid var(--border);">
+                                    <p class="mb-0 text-dark fst-italic small">
+                                        <i class="bi bi-chat-left-quote text-teal me-2"></i>"{{ log.notes }}"
+                                    </p>
+                                </div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-5 mt-4">
+                        <div class="mx-auto mb-3 d-flex align-items-center justify-content-center rounded-circle" 
+                             style="width: 64px; height: 64px; background: var(--bg-section); color: var(--text-muted);">
+                            <i class="bi bi-calendar-x fs-2"></i>
+                        </div>
+                        <h5 class="fw-bold text-dark">No timeline events yet</h5>
+                        <p class="text-muted small">Logs will appear here once the application status is updated.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

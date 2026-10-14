@@ -1,0 +1,213 @@
+<div class="sidebar d-flex flex-column" id="mainSidebar">
+
+    <!-- Brand repeat inside sidebar for mobile -->
+    <div class="d-flex align-items-center gap-2 mb-4 pb-3"
+         style="border-bottom: 1px solid rgba(255,255,255,0.12);">
+        <i class="bi bi-briefcase-fill" style="color: var(--cream); font-size: 1.2rem;"></i>
+        <span style="color: var(--cream); font-weight: 700; font-size: 1rem; letter-spacing: -0.02em;">SmartRecruit</span>
+    </div>
+
+    <ul class="nav flex-column mb-auto">
+
+        {% if user.role == 'ADMIN' %}
+        <li class="sidebar-section-label">Administration</li>
+        <li class="nav-item">
+            <a href="{% url 'admin_dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'admin_dashboard' %}active{% endif %}">
+                <i class="bi bi-speedometer2"></i> Dashboard
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="{% url 'admin_users' %}" class="nav-link {% if request.resolver_match.url_name == 'admin_users' %}active{% endif %}">
+                <i class="bi bi-people"></i> Users & Roles
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="{% url 'admin_recruiters' %}" class="nav-link {% if request.resolver_match.url_name == 'admin_recruiters' %}active{% endif %}">
+                <i class="bi bi-building"></i> Recruiters
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="{% url 'admin_candidates' %}" class="nav-link {% if request.resolver_match.url_name == 'admin_candidates' %}active{% endif %}">
+                <i class="bi bi-person-badge"></i> Candidates
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="{% url 'admin_categories' %}" class="nav-link {% if request.resolver_match.url_name == 'admin_categories' %}active{% endif %}">
+                <i class="bi bi-tags"></i> Job Categories
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="{% url 'admin_ai_config' %}" class="nav-link {% if request.resolver_match.url_name == 'admin_ai_config' %}active{% endif %}">
+                <i class="bi bi-robot"></i> AI Model Management
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="{% url 'admin_audit_logs' %}" class="nav-link {% if request.resolver_match.url_name == 'admin_audit_logs' %}active{% endif %}">
+                <i class="bi bi-file-earmark-bar-graph"></i> Reports & Audit Logs
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="{% url 'admin_system_config' %}" class="nav-link {% if request.resolver_match.url_name == 'admin_system_config' %}active{% endif %}">
+                <i class="bi bi-gear"></i> System Configuration
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="{% url 'admin_backup_security' %}" class="nav-link {% if request.resolver_match.url_name == 'admin_backup_security' %}active{% endif %}">
+                <i class="bi bi-shield-check"></i> Backup & Security
+            </a>
+        </li>
+
+        {% elif user.role == 'RECRUITER' %}
+        <li class="sidebar-section-label">Recruiter Portal</li>
+        <li class="nav-item">
+            <a href="{% url 'recruiter_dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'recruiter_dashboard' %}active{% endif %}">
+                <i class="bi bi-speedometer2"></i> Dashboard
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="{% url 'company_job_list' %}" class="nav-link {% if request.resolver_match.url_name in 'company_job_list job_create job_edit job_detail' %}active{% endif %}">
+                <i class="bi bi-briefcase"></i> Jobs
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="{% url 'manage_applications' %}" class="nav-link {% if request.resolver_match.url_name in 'manage_applications application_detail hiring_decision' and request.GET.status != 'AI_SCREENED' %}active{% endif %}">
+                <i class="bi bi-inbox"></i> Applicants
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="{% url 'manage_applications' %}?status=AI_SCREENED" class="nav-link {% if request.resolver_match.url_name == 'workflow_dashboard' or request.GET.status == 'AI_SCREENED' %}active{% endif %}">
+                <i class="bi bi-funnel"></i> AI Screening
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="{% url 'recruiter_candidate_list' %}" class="nav-link {% if request.resolver_match.url_name in 'recruiter_candidate_list recruiter_candidate_detail' or 'ranking' in request.path %}active{% endif %}">
+                <i class="bi bi-stars"></i> Candidate Ranking
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="{% url 'assessments:dashboard' %}" class="nav-link {% if 'assessments' in request.path or 'skill_gap' in request.path %}active{% endif %}">
+                <i class="bi bi-clipboard-check"></i> Assessments
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="{% url 'scheduled_interviews' %}" class="nav-link {% if request.resolver_match.url_name in 'scheduled_interviews schedule_interview interview_detail upload_transcript summary_detail' %}active{% endif %}">
+                <i class="bi bi-calendar-event"></i> Interviews
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="{% url 'assistant_chat' %}" class="nav-link {% if request.resolver_match.url_name == 'assistant_chat' or 'assistant' in request.path %}active{% endif %}">
+                <i class="bi bi-robot"></i> AI Assistant
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="{% url 'reports_dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'reports_dashboard' or 'reports' in request.path %}active{% endif %}">
+                <i class="bi bi-file-earmark-bar-graph"></i> Reports
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="{% url 'analytics_dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'analytics_dashboard' or 'analytics' in request.path %}active{% endif %}">
+                <i class="bi bi-graph-up-arrow"></i> Analytics &amp; Funnel
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="{% url 'notification_list' %}" class="nav-link {% if request.resolver_match.url_name == 'notification_list' %}active{% endif %}">
+                <i class="bi bi-bell"></i> Notifications
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="{% url 'company_profile' %}" class="nav-link {% if request.resolver_match.url_name in 'company_profile company_create company_update' %}active{% endif %}">
+                <i class="bi bi-building"></i> Company Profile
+            </a>
+        </li>
+
+        {% elif user.role == 'CANDIDATE' %}
+        <li class="sidebar-section-label">Candidate Portal</li>
+        <li class="nav-item">
+            <a href="{% url 'candidate_dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'candidate_dashboard' %}active{% endif %}">
+                <i class="bi bi-speedometer2"></i> Dashboard
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="{% url 'analytics_dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'analytics_dashboard' %}active{% endif %}">
+                <i class="bi bi-graph-up-arrow"></i> My Analytics
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="{% url 'candidate_profile' %}" class="nav-link {% if request.resolver_match.url_name in 'candidate_profile candidate_profile_edit' %}active{% endif %}">
+                <i class="bi bi-person-badge"></i> Profile
+            </a>
+        </li>
+
+        <li class="nav-item">
+            <a href="{% url 'resume_upload' %}" class="nav-link {% if request.resolver_match.url_name == 'resume_upload' %}active{% endif %}">
+                <i class="bi bi-file-earmark-pdf"></i> My Resume
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="{% url 'job_list' %}" class="nav-link {% if request.resolver_match.url_name in 'job_list job_detail' %}active{% endif %}">
+                <i class="bi bi-search"></i> Find Jobs
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="{% url 'my_applications' %}" class="nav-link {% if request.resolver_match.url_name in 'my_applications application_detail' %}active{% endif %}">
+                <i class="bi bi-file-person"></i> My Applications
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="{% url 'assessments:my_assessments' %}" class="nav-link {% if 'assessments' in request.path %}active{% endif %}">
+                <i class="bi bi-clipboard-check"></i> Assessments
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="{% url 'my_interviews' %}" class="nav-link {% if request.resolver_match.url_name in 'my_interviews interview_detail' %}active{% endif %}">
+                <i class="bi bi-calendar-event"></i> Interviews
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="{% url 'notification_list' %}" class="nav-link {% if request.resolver_match.url_name == 'notification_list' %}active{% endif %}">
+                <i class="bi bi-bell"></i> Notifications
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="{% url 'password_change' %}" class="nav-link {% if request.resolver_match.url_name == 'password_change' %}active{% endif %}">
+                <i class="bi bi-gear"></i> Settings
+            </a>
+        </li>
+        {% endif %}
+
+        <li class="sidebar-section-label mt-3">General</li>
+        <li class="nav-item">
+            <a href="{% url 'notification_list' %}" class="nav-link {% if request.resolver_match.url_name == 'notification_list' %}active{% endif %}">
+                <i class="bi bi-bell"></i> Notifications
+                {% if unread_notifications_count and unread_notifications_count > 0 %}
+                    <span class="badge rounded-pill ms-auto"
+                          style="background: rgba(254,255,214,0.30); color: var(--cream); font-size: 0.65rem;">
+                        {{ unread_notifications_count }}
+                    </span>
+                {% endif %}
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="{% url 'profile' %}" class="nav-link {% if request.resolver_match.url_name == 'profile' %}active{% endif %}">
+                <i class="bi bi-person-circle"></i> My Profile
+            </a>
+        </li>
+    </ul>
+
+    <!-- User info at bottom -->
+    <div class="mt-auto pt-3" style="border-top: 1px solid rgba(255,255,255,0.12);">
+        <div class="d-flex align-items-center gap-2">
+            <span class="d-flex align-items-center justify-content-center rounded-circle fw-bold"
+                  style="width:36px;height:36px;background:rgba(254,255,214,0.18);color:var(--cream);font-size:0.9rem;flex-shrink:0;">
+                {{ user.username|first|upper }}
+            </span>
+            <div style="overflow:hidden;">
+                <div style="color:var(--cream);font-size:0.82rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                    {{ user.get_full_name|default:user.username }}
+                </div>
+                <div style="color:rgba(254,255,214,0.55);font-size:0.72rem;">{{ user.email }}</div>
+            </div>
+        </div>
+    </div>
+
+</div>

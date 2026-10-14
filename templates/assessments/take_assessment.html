@@ -1,0 +1,173 @@
+{% extends 'base.html' %}
+
+{% block title %}Take Assessment: {{ assessment.title }} – SmartRecruit{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 animate-fade-in">
+    <div>
+        <h2 class="fw-bold m-0" style="color:#1F6B5C !important;">{{ assessment.title }}</h2>
+        <p class="mb-0 fw-600" style="color:#3D7A70 !important;">Technical Skill Assessment</p>
+    </div>
+    <div class="bg-white px-4 py-2 rounded-3 shadow-sm d-flex align-items-center gap-3">
+        <i class="bi bi-clock-history fs-4 text-warning"></i>
+        <div>
+            <div class="small text-muted fw-bold text-uppercase" style="font-size:0.7rem;">Time Remaining</div>
+            <div id="countdown" class="fw-bold fs-5 text-dark font-monospace" data-seconds="{{ time_limit_seconds }}">
+                Loading...
+            </div>
+        </div>
+    </div>
+</div>
+
+<form id="assessmentForm" method="post" action="{% url 'assessments:take_assessment' assessment.pk %}">
+    {% csrf_token %}
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-body p-4 p-md-5">
+            {% if assessment.description %}
+            <div class="p-3 rounded-3 mb-4" style="background: rgba(31, 107, 92, 0.08); border-left: 4px solid var(--teal);">
+                <p class="mb-0 text-dark fw-500" style="color: #1A4A42 !important;">{{ assessment.description }}</p>
+            </div>
+            {% endif %}
+
+            {% for q in questions %}
+            <div class="mb-5 question-block p-4 rounded-3 border shadow-sm" style="background: #ffffff; border-color: #CBD5E1 !important;">
+                <div class="d-flex justify-content-between align-items-start gap-3 mb-3 pb-2 border-bottom">
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <span class="badge px-3 py-2" style="background: var(--deep-teal); color: #ffffff; font-size: 0.85rem; border-radius: 6px;">Question {{ forloop.counter }}</span>
+                        {% if q.question_type == 'MCQ' %}
+                            <span class="badge bg-light text-secondary border px-2 py-1" style="font-size:0.75rem;">Multiple Choice</span>
+                        {% elif q.question_type == 'CODING' %}
+                            <span class="badge bg-dark text-info border border-info px-2 py-1" style="font-size:0.75rem;"><i class="bi bi-code-slash me-1"></i>Coding Challenge</span>
+                        {% else %}
+                            <span class="badge bg-light text-secondary border px-2 py-1" style="font-size:0.75rem;">Written Answer</span>
+                        {% endif %}
+                    </div>
+                    <span class="badge px-3 py-2 flex-shrink-0" style="background: #E6F4F1; color: #1F6B5C; font-size: 0.85rem; border: 1px solid #5BAEA0; font-weight: 700;">{{ q.marks }} pts</span>
+                </div>
+
+                <div class="mb-4">
+                    <h5 class="fw-bold m-0 lh-base" style="color: #0F172A !important; font-size: 1.1rem;">
+                        {{ q.text|linebreaksbr }}
+                    </h5>
+                </div>
+
+                {% if q.question_type == 'MCQ' %}
+                    <div class="mt-3">
+                        {% for opt in q.options %}
+                        <div class="form-check mb-3 p-3 rounded-3 border d-flex align-items-center gap-2 hover-bg-light" style="border-color: #CBD5E1 !important; background: #F8FAFC; transition: background 0.15s ease;">
+                            <input class="form-check-input border-secondary fs-5 m-0 cursor-pointer" type="radio" name="question_{{ q.id }}" id="q{{ q.id }}_opt{{ forloop.counter }}" value="{{ opt }}" required style="cursor: pointer; flex-shrink:0;">
+                            <label class="form-check-label cursor-pointer fw-600 fs-6 m-0 w-100 ps-1" for="q{{ q.id }}_opt{{ forloop.counter }}" style="color: #1A365D !important;">{{ opt }}</label>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                {% elif q.question_type == 'APTITUDE' or q.question_type == 'TECHNICAL' %}
+                    <div class="ms-1 ms-md-3 mt-3">
+                        <textarea class="form-control text-dark fw-500 fs-6 p-3" name="question_{{ q.id }}" rows="4" placeholder="Type your detailed answer here..." required style="border-color: #CBD5E1; color: #1E293B !important; background: #FFFFFF;"></textarea>
+                    </div>
+
+                {% elif q.question_type == 'CODING' %}
+                    <div class="ms-1 ms-md-3 mt-3 border rounded-3 overflow-hidden shadow-sm">
+                        <div class="p-3 border-bottom d-flex justify-content-between align-items-center" style="background: #1E293B; color: #F8FAFC;">
+                            <span class="small fw-bold text-white"><i class="bi bi-code-slash me-2" style="color: #38BDF8;"></i>Code Editor (Python 3)</span>
+                            <button type="button" class="btn btn-sm btn-success run-code-btn fw-bold px-3" data-qid="{{ q.id }}">
+                                <i class="bi bi-play-fill me-1"></i>Run Code
+                            </button>
+                        </div>
+                        <textarea class="form-control font-monospace border-0 rounded-0 p-3" name="question_{{ q.id }}" id="code_{{ q.id }}" rows="9" style="background:#0F172A;color:#F1F5F9;resize:vertical;font-size:0.95rem;">{{ q.code_snippet|default:"def solve():\n    # write your code here\n    pass\n" }}</textarea>
+                        
+                        <div id="output_{{ q.id }}" class="text-light p-3 font-monospace small d-none" style="background:#020617;max-height:200px;overflow-y:auto;border-top:1px solid #334155;">
+                            <div class="text-info fw-bold mb-1"><i class="bi bi-terminal me-1"></i>Execution Output:</div>
+                            <pre class="m-0 text-success output-content" style="font-size:0.9rem;white-space:pre-wrap;"></pre>
+                            <pre class="m-0 text-danger error-content" style="font-size:0.9rem;white-space:pre-wrap;"></pre>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+            
+            <hr class="my-4">
+            <div class="d-flex justify-content-end">
+                <button type="submit" class="btn btn-primary-custom px-5 py-3 fw-bold fs-5 shadow-teal" id="submitBtn">
+                    Submit Assessment <i class="bi bi-check-circle ms-2"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</form>
+
+<script>
+    // ── Timer Logic ──────────────────────────────────────────────────────────
+    document.addEventListener("DOMContentLoaded", function() {
+        const timerEl = document.getElementById("countdown");
+        let seconds = parseInt(timerEl.getAttribute("data-seconds"));
+        
+        function updateTimer() {
+            if (seconds <= 0) {
+                timerEl.textContent = "00:00";
+                timerEl.classList.add("text-danger");
+                alert("Time is up! Submitting your assessment.");
+                document.getElementById("assessmentForm").submit();
+                return;
+            }
+            
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            timerEl.textContent = String(mins).padStart(2, '0') + ":" + String(secs).padStart(2, '0');
+            
+            if (seconds < 300) { // Last 5 minutes
+                timerEl.classList.remove("text-dark");
+                timerEl.classList.add("text-danger", "animate-pulse");
+            }
+            seconds--;
+            setTimeout(updateTimer, 1000);
+        }
+        updateTimer();
+        
+        // ── Code Execution via Judge0 Sandbox ──────────────────────────────
+        document.querySelectorAll('.run-code-btn').forEach(btn => {
+            btn.addEventListener('click', async function() {
+                const qid = this.getAttribute('data-qid');
+                const code = document.getElementById('code_' + qid).value;
+                const outBox = document.getElementById('output_' + qid);
+                const outContent = outBox.querySelector('.output-content');
+                const errContent = outBox.querySelector('.error-content');
+                
+                this.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>Running...';
+                this.disabled = true;
+                outBox.classList.remove('d-none');
+                outContent.textContent = 'Submitting to sandbox...';
+                errContent.textContent = '';
+                
+                try {
+                    const response = await fetch('{% url "assessments:execute_code" %}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                        },
+                        body: JSON.stringify({
+                            code: code,
+                            language: 'python'
+                        })
+                    });
+                    const result = await response.json();
+                    
+                    if (result.stderr || result.compile_output) {
+                        outContent.textContent = result.stdout || '';
+                        errContent.textContent = (result.stderr || '') + '\n' + (result.compile_output || '');
+                    } else {
+                        outContent.textContent = result.stdout || 'Program executed successfully with no output.';
+                        if (result.time) outContent.textContent += `\n[Time: ${result.time}s, Mem: ${result.memory}KB]`;
+                    }
+                } catch (e) {
+                    errContent.textContent = 'Sandbox execution failed: ' + e;
+                } finally {
+                    this.innerHTML = '<i class="bi bi-play-fill me-1"></i>Run Code';
+                    this.disabled = false;
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

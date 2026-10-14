@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Skill Gap Report — {{ report.job.title }} | SmartRecruit</title>
+  <style>
+    /* ── Reset & Base ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #fff; color: #1a1a2e;
+      font-size: 12px; line-height: 1.6;
+      padding: 0;
+    }
+
+    /* ── Page Setup ── */
+    @page {
+      size: A4;
+      margin: 20mm 18mm 20mm 18mm;
+    }
+    @media print {
+      body { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+      .no-print { display: none !important; }
+      .page-break { page-break-before: always; }
+      .page-break-avoid { page-break-inside: avoid; }
+    }
+
+    /* ── Layout ── */
+    .page { max-width: 800px; margin: 0 auto; padding: 24px; }
+    .row { display: flex; gap: 16px; }
+    .col-half { flex: 1; }
+
+    /* ── Header ── */
+    .report-header {
+      background: linear-gradient(135deg, #1e1e3f, #0f0f2e);
+      color: white; padding: 24px 28px;
+      border-radius: 12px; margin-bottom: 20px;
+    }
+    .report-header h1 { font-size: 1.4rem; color: #fff; margin-bottom: 4px; }
+    .report-header .subtitle { color: #a5b4fc; font-size: 0.85rem; }
+    .score-badge {
+      display: inline-block;
+      background: {% if report.match_percentage >= 70 %}#16a34a{% elif report.match_percentage >= 45 %}#d97706{% else %}#dc2626{% endif %};
+      color: white; padding: 6px 18px;
+      border-radius: 99px; font-weight: 700; font-size: 1rem;
+    }
+    .header-meta { font-size: 0.75rem; color: #94a3b8; margin-top: 6px; }
+
+    /* ── Section ── */
+    .section { margin-bottom: 20px; page-break-inside: avoid; }
+    .section-title {
+      font-size: 0.65rem; font-weight: 700; letter-spacing: 2px;
+      text-transform: uppercase; color: #6366f1;
+      border-bottom: 1px solid #e2e8f0; padding-bottom: 6px;
+      margin-bottom: 12px;
+    }
+
+    /* ── Skill Tags ── */
+    .tags { display: flex; flex-wrap: wrap; gap: 5px; }
+    .tag {
+      display: inline-block; padding: 3px 10px;
+      border-radius: 5px; font-size: 0.72rem; font-weight: 600;
+    }
+    .tag-matched { background: #dcfce7; color: #15803d; border: 1px solid #86efac; }
+    .tag-missing  { background: #fee2e2; color: #dc2626; border: 1px solid #fca5a5; }
+    .tag-extra    { background: #ede9fe; color: #7c3aed; border: 1px solid #c4b5fd; }
+
+    /* ── Stats Row ── */
+    .stat-row { display: flex; gap: 12px; margin-bottom: 16px; }
+    .stat-box {
+      flex: 1; text-align: center; padding: 12px;
+      border-radius: 10px; border: 1px solid #e2e8f0;
+      background: #f8fafc;
+    }
+    .stat-box .num { font-size: 1.6rem; font-weight: 800; line-height: 1; }
+    .stat-box .label { font-size: 0.65rem; color: #64748b; margin-top: 3px; }
+
+    /* ── AI Summary ── */
+    .ai-box {
+      background: #f0f4ff; border-left: 4px solid #6366f1;
+      padding: 12px 16px; border-radius: 0 8px 8px 0; margin-bottom: 16px;
+    }
+    .ai-box p { font-size: 0.82rem; color: #334155; margin: 0; line-height: 1.7; }
+
+    /* ── Learning Path ── */
+    .path-step {
+      display: flex; gap: 12px; margin-bottom: 10px;
+      padding: 10px 12px; border-radius: 8px;
+      border: 1px solid #e2e8f0; background: #f8fafc;
+      page-break-inside: avoid;
+    }
+    .step-num {
+      width: 26px; height: 26px; border-radius: 50%;
+      background: #6366f1; color: white;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.72rem; font-weight: 700; flex-shrink: 0;
+    }
+    .step-body { flex: 1; }
+    .step-body strong { font-size: 0.82rem; display: block; color: #1e293b; }
+    .step-body span { font-size: 0.72rem; color: #64748b; }
+    .step-hours {
+      font-size: 0.68rem; background: #ede9fe; color: #7c3aed;
+      padding: 2px 8px; border-radius: 99px; flex-shrink: 0;
+      align-self: flex-start;
+    }
+
+    /* ── Course Table ── */
+    table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
+    th { background: #f1f5f9; padding: 7px 10px; text-align: left; font-size: 0.65rem;
+         letter-spacing: 1px; text-transform: uppercase; color: #475569; }
+    td { padding: 7px 10px; border-bottom: 1px solid #f1f5f9; }
+    tr:last-child td { border-bottom: none; }
+
+    /* ── Certifications ── */
+    .cert-item {
+      display: flex; align-items: center; gap: 8px;
+      padding: 7px 0; border-bottom: 1px solid #f1f5f9; font-size: 0.82rem;
+    }
+    .cert-item:last-child { border-bottom: none; }
+    .cert-dot { width: 8px; height: 8px; border-radius: 50%; background: #f59e0b; flex-shrink: 0; }
+
+    /* ── Footer ── */
+    .report-footer {
+      margin-top: 24px; padding-top: 12px; border-top: 1px solid #e2e8f0;
+      display: flex; justify-content: space-between;
+      font-size: 0.65rem; color: #94a3b8;
+    }
+
+    /* ── Print Button ── */
+    .print-btn {
+      position: fixed; top: 20px; right: 20px;
+      background: #6366f1; color: white;
+      padding: 10px 20px; border-radius: 8px; border: none;
+      cursor: pointer; font-weight: 600; font-size: 0.9rem;
+      box-shadow: 0 4px 12px rgba(99,102,241,0.4);
+      display: flex; align-items: center; gap: 6px;
+      z-index: 1000;
+    }
+    .print-btn:hover { background: #4f46e5; }
+  </style>
+</head>
+<body>
+  <!-- Print Button (hidden on print) -->
+  <button class="print-btn no-print" onclick="window.print()">
+    🖨️ Print / Save as PDF
+  </button>
+
+  <div class="page">
+    <!-- Header -->
+    <div class="report-header">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:10px;">
+        <div>
+          <div style="font-size:0.7rem; color:#818cf8; letter-spacing:2px; margin-bottom:6px;">SKILL GAP ANALYSIS REPORT</div>
+          <h1>{{ report.job.title }}</h1>
+          <div class="subtitle">{{ report.job.company.name }} · {{ report.job.get_work_model_display }}</div>
+          <div class="header-meta">
+            Candidate: {{ report.candidate.full_name|default:report.candidate.user.email }} ·
+            Generated: {{ report.generated_at|date:"M d, Y" }}
+          </div>
+        </div>
+        <div style="text-align:center;">
+          <div class="score-badge">{{ report.match_percentage|floatformat:1 }}% Match</div>
+          <div class="header-meta" style="color:#94a3b8; margin-top:5px;">~{{ report.estimated_hours }}hrs to bridge gap</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats Row -->
+    <div class="stat-row">
+      <div class="stat-box">
+        <div class="num" style="color:#16a34a;">{{ report.matched_skills|length }}</div>
+        <div class="label">Matched Skills</div>
+      </div>
+      <div class="stat-box">
+        <div class="num" style="color:#dc2626;">{{ report.missing_skills|length }}</div>
+        <div class="label">Missing Skills</div>
+      </div>
+      <div class="stat-box">
+        <div class="num" style="color:#6366f1;">{{ report.estimated_hours }}</div>
+        <div class="label">Estimated Hours</div>
+      </div>
+      <div class="stat-box">
+        <div class="num" style="color:#d97706;">{{ weeks_estimate }}</div>
+        <div class="label">Weeks to Ready</div>
+      </div>
+    </div>
+
+    <!-- AI Summary -->
+    {% if report.ai_summary %}
+    <div class="section">
+      <div class="section-title">🤖 AI Career Coach Summary</div>
+      <div class="ai-box"><p>{{ report.ai_summary }}</p></div>
+    </div>
+    {% endif %}
+
+    <!-- Skills Grid -->
+    <div class="row section">
+      <div class="col-half">
+        <div class="section-title">✅ Matched Skills</div>
+        <div class="tags">
+          {% for s in report.matched_skills %}
+            <span class="tag tag-matched">{{ s }}</span>
+          {% empty %}
+            <span style="color:#94a3b8; font-size:0.75rem;">None</span>
+          {% endfor %}
+        </div>
+      </div>
+      <div class="col-half">
+        <div class="section-title">⚠️ Missing Skills</div>
+        <div class="tags">
+          {% for s in report.missing_skills %}
+            <span class="tag tag-missing">{{ s }}</span>
+          {% empty %}
+            <span style="color:#16a34a; font-size:0.75rem;">None — Fully qualified!</span>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Learning Path -->
+    {% if report.learning_path %}
+    <div class="section page-break-avoid">
+      <div class="section-title">🗺️ AI Learning Path</div>
+      {% for step in report.learning_path %}
+      <div class="path-step">
+        <div class="step-num">{{ step.step }}</div>
+        <div class="step-body">
+          <strong>{{ step.skill }} — {{ step.action }}</strong>
+          <span>📚 {{ step.resource }}</span>
+        </div>
+        <div class="step-hours">{{ step.estimated_hours }}hrs</div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Courses -->
+    {% if report.recommended_courses %}
+    <div class="section page-break-avoid">
+      <div class="section-title">🎓 Recommended Courses</div>
+      <table>
+        <thead>
+          <tr><th>Skill Gap</th><th>Recommended Course</th><th>Hours</th></tr>
+        </thead>
+        <tbody>
+          {% for course in report.recommended_courses %}
+          <tr>
+            <td><strong>{{ course.skill }}</strong></td>
+            <td>{{ course.course }}</td>
+            <td>{{ course.hours }}hrs</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
+
+    <!-- Certifications -->
+    {% if report.recommended_certs %}
+    <div class="section page-break-avoid">
+      <div class="section-title">🏅 Recommended Certifications</div>
+      {% for cert in report.recommended_certs %}
+      <div class="cert-item">
+        <div class="cert-dot"></div>
+        <span>{{ cert }}</span>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Footer -->
+    <div class="report-footer">
+      <span>SmartRecruit — AI-Powered Recruitment Intelligence Platform</span>
+      <span>Generated: {{ report.generated_at|date:"F d, Y" }}</span>
+    </div>
+  </div>
+</body>
+</html>
